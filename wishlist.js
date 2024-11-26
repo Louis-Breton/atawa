@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const drawerBody = document.querySelector('.drawer_body[wl="list"]');
     const emptyState = document.querySelector('[wl="empty"]');
     const cta = document.querySelector('[wl="cta"]');
+    const label = document.querySelector('[wl="label"]');
 
     let wishlist = JSON.parse(localStorage.getItem(WISHLIST_KEY)) || [];
 
@@ -10,6 +11,21 @@ document.addEventListener("DOMContentLoaded", function () {
     function updateCounter() {
         const counters = document.querySelectorAll('[wl="counter"]');
         counters.forEach(counter => counter.textContent = wishlist.length);
+
+        updateLabel();
+    }
+
+    // Met à jour le label à côté du compteur
+    function updateLabel() {
+        const lang = navigator.language || navigator.userLanguage; // Récupère la langue du navigateur
+        const isFrench = lang.startsWith('fr');
+        const count = wishlist.length;
+
+        if (isFrench) {
+            label.textContent = count <= 1 ? "produit ajouté :" : "produits ajoutés :";
+        } else {
+            label.textContent = count <= 1 ? "product:" : "products:";
+        }
     }
 
     // Met à jour l'état vide / CTA
@@ -27,10 +43,8 @@ document.addEventListener("DOMContentLoaded", function () {
     function updateWishlistButtons() {
         const buttons = document.querySelectorAll('[wl="button"]');
         buttons.forEach(button => {
-            const productWrapper = button.closest('[wl="product"]');
-            const productLink = productWrapper.querySelector('[wl="link"]').getAttribute("href");
-
-            if (wishlist.find(item => item.link === productLink)) {
+            const productId = button.getAttribute("wl-id");
+            if (wishlist.find(item => item.id === productId)) {
                 button.classList.add("is-active");
                 button.setAttribute("data-tooltip", "Retirer de ma wishlist");
             } else {
@@ -43,16 +57,17 @@ document.addEventListener("DOMContentLoaded", function () {
     // Ajoute ou retire un produit de la wishlist
     function toggleWishlist(button) {
         const productWrapper = button.closest('[wl="product"]');
-        const productLink = productWrapper.querySelector('[wl="link"]').getAttribute("href");
+        const productId = button.getAttribute("wl-id");
 
         const product = {
+            id: productId,
             name: productWrapper.querySelector('[wl="name"]').textContent,
-            link: productLink,
+            link: productWrapper.querySelector('[wl="link"]').getAttribute("href"),
             image: productWrapper.querySelector('[wl="image"]').getAttribute("src"),
             category: productWrapper.querySelector('[wl="category"]').textContent
         };
 
-        const index = wishlist.findIndex(item => item.link === productLink);
+        const index = wishlist.findIndex(item => item.id === productId);
         if (index > -1) {
             wishlist.splice(index, 1); // Retirer
         } else {
@@ -66,9 +81,9 @@ document.addEventListener("DOMContentLoaded", function () {
         updateCounter();
     }
 
-    // Supprime un produit par lien
-    function removeFromWishlist(link) {
-        const index = wishlist.findIndex(item => item.link === link);
+    // Supprime un produit par ID
+    function removeFromWishlist(productId) {
+        const index = wishlist.findIndex(item => item.id === productId);
         if (index > -1) {
             wishlist.splice(index, 1);
             localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist));
@@ -105,7 +120,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // Ajout de l'événement pour supprimer un produit
             card.querySelector('[wl-card="remove"]').addEventListener("click", () => {
-                removeFromWishlist(product.link);
+                removeFromWishlist(product.id);
                 card.remove();
                 renderWishlist(); // Met à jour la liste et l'affichage
             });
