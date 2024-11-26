@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const emptyState = document.querySelector('[wl="empty"]');
     const cta = document.querySelector('[wl="cta"]');
 
-    const wishlist = JSON.parse(localStorage.getItem(WISHLIST_KEY)) || [];
+    let wishlist = JSON.parse(localStorage.getItem(WISHLIST_KEY)) || [];
 
     // Met à jour le compteur wishlist
     function updateCounter() {
@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Met à jour l'état vide / CTA
     function updateEmptyState() {
         if (wishlist.length === 0) {
-            emptyState.style.display = "block";
+            emptyState.style.display = "flex"; // Utiliser flex au lieu de block
             cta.style.display = "none";
         } else {
             emptyState.style.display = "none";
@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const buttons = document.querySelectorAll('[wl="button"]');
         buttons.forEach(button => {
             const productWrapper = button.closest('[wl="product"]');
-            const productLink = productWrapper.querySelector('[wl="link"]').getAttribute("src");
+            const productLink = productWrapper.querySelector('[wl="link"]').getAttribute("href");
 
             if (wishlist.find(item => item.link === productLink)) {
                 button.classList.add("is-active");
@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Ajoute ou retire un produit de la wishlist
     function toggleWishlist(button) {
         const productWrapper = button.closest('[wl="product"]');
-        const productLink = productWrapper.querySelector('[wl="link"]').getAttribute("src");
+        const productLink = productWrapper.querySelector('[wl="link"]').getAttribute("href");
 
         const product = {
             name: productWrapper.querySelector('[wl="name"]').textContent,
