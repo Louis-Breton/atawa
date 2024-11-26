@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const emptyState = document.querySelector('[wl="empty"]');
     const cta = document.querySelector('[wl="cta"]');
     const label = document.querySelector('[wl="counter-label"]');
+    const counterWrap = document.querySelector('[wl="counter-wrap"]'); // Élément à gérer
 
     let wishlist = JSON.parse(localStorage.getItem(WISHLIST_KEY) || '[]');
 
@@ -21,6 +22,14 @@ document.addEventListener("DOMContentLoaded", function () {
         const counters = document.querySelectorAll('[wl="counter"]');
         counters.forEach(counter => (counter.textContent = wishlist.length));
         updateLabel();
+        updateCounterWrap();
+    }
+
+    // Affiche ou cache le counter-wrap
+    function updateCounterWrap() {
+        if (counterWrap) {
+            counterWrap.style.display = wishlist.length === 0 ? "none" : "block";
+        }
     }
 
     // Met à jour le label à côté du compteur
@@ -166,17 +175,18 @@ document.addEventListener("DOMContentLoaded", function () {
         updateEmptyState();
     }
 
-    // Ajout des événements aux boutons
-    document.body.addEventListener("click", function (e) {
-        const button = e.target.closest('[wl="button"]');
-        if (button) {
-            toggleWishlist(button);
-        }
-    });
+    // Ajoute des événements de clic aux boutons wishlist
+    function attachButtonEvents() {
+        const buttons = document.querySelectorAll('[wl="button"]');
+        buttons.forEach(button => {
+            button.addEventListener("click", () => toggleWishlist(button));
+        });
+    }
 
     // Initialisation
     updateButtonState();
     updateEmptyState();
     updateCounter();
     renderWishlist();
+    attachButtonEvents(); // Attache les événements
 });
