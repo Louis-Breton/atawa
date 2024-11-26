@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", function () {
             ? (count <= 1 ? "produit ajouté :" : "produits ajoutés :")
             : (count <= 1 ? "product:" : "products:");
 
-        label.textContent = ` ${labelText}`; // Remplace complètement le texte
+        label.textContent = labelText; // Met à jour le contenu
     }
 
     // Met à jour l'état vide / CTA
@@ -140,7 +140,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Initialisation
-    updateWishlistButtons();
+    updateButtonState();
     updateEmptyState();
     updateCounter();
     renderWishlist();
