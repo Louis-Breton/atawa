@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
         updateLabel();
     }
 
-    // Met à jour le label du compteur
+    // Met à jour le label à côté du compteur
     function updateLabel() {
         const lang = navigator.language || navigator.userLanguage; // Récupère la langue du navigateur
         const isFrench = lang.startsWith('fr');
