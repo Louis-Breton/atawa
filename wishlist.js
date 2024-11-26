@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", function () {
             ? (count <= 1 ? "produit ajouté :" : "produits ajoutés :")
             : (count <= 1 ? "product:" : "products:");
 
-        label.textContent =  ${labelText}; // Remplace complètement le texte
+        label.textContent = labelText; // Met à jour le contenu
     }
 
     // Met à jour l'état vide / CTA
@@ -103,7 +103,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const card = document.createElement("div");
             card.classList.add("wishlist_card");
             card.setAttribute("wl-card", "card");
-            card.innerHTML = 
+            card.innerHTML = `
                 <div class="wishlist_card-image">
                     <img src="${product.image}" loading="lazy" alt="${product.name}" class="image-cover" wl-card="image">
                 </div>
@@ -117,7 +117,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         </svg>
                     </div>
                 </div>
-            ;
+            `;
 
             // Ajout de l'événement pour supprimer un produit
             card.querySelector('[wl-card="remove"]').addEventListener("click", () => {
@@ -140,7 +140,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Initialisation
-    updateWishlistButtons();
+    updateButtonState();
     updateEmptyState();
     updateCounter();
     renderWishlist();
