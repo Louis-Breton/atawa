@@ -2,8 +2,8 @@ name: Minify JavaScript
 
 on:
   push:
-    paths:
-      - wishlist.js
+    tags:
+      - 'v*'
 
 jobs:
   build:
@@ -12,6 +12,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0 # Assure que les tags et les branches sont récupérés
 
     - name: Set up Node.js
       uses: actions/setup-node@v3
@@ -24,10 +26,15 @@ jobs:
     - name: Minify JavaScript
       run: terser wishlist.js -o wishlist.min.js --compress --mangle
 
-    - name: Commit and push changes
+    - name: Commit and push changes if needed
       run: |
         git config --global user.name 'GitHub Actions'
         git config --global user.email 'actions@github.com'
+        git checkout main # S'assure que nous sommes sur la branche main
         git add wishlist.min.js
-        git commit -m "Minify wishlist.js automatically"
-        git push origin HEAD:main
+        if git diff --cached --quiet; then
+          echo "No changes to commit."
+        else
+          git commit -m "Minify wishlist.js automatically"
+          git push origin main
+        fi
