@@ -4,11 +4,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const emptyState = document.querySelector('[wl="empty"]');
     const cta = document.querySelector('[wl="cta"]');
     const label = document.querySelector('[wl="counter-label"]');
-    const counterWrap = document.querySelector('[wl="counter-wrap"]'); // Élément à gérer
+    const counterWrap = document.querySelector('[wl="counter-wrap"]');
+    const cmsList = document.querySelector('[fs-cmsload-element="list"]'); // Conteneur CMS principal
 
     let wishlist = JSON.parse(localStorage.getItem(WISHLIST_KEY) || '[]');
 
-    // Vérifie et met à jour le localStorage en cas de problème
+    // Synchronise les données locales avec le localStorage
     function syncLocalStorage() {
         try {
             localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist));
@@ -124,7 +125,6 @@ document.addEventListener("DOMContentLoaded", function () {
             card.classList.add("wishlist_card");
             card.setAttribute("wl-card", "card");
 
-            // Utilisation de méthodes sécurisées pour créer le contenu
             const cardImage = document.createElement("div");
             cardImage.classList.add("wishlist_card-image");
             const img = document.createElement("img");
@@ -162,7 +162,6 @@ document.addEventListener("DOMContentLoaded", function () {
             // Supprimer le produit au clic
             removeButton.addEventListener("click", () => removeFromWishlist(product.id));
 
-            // Ajouter tous les éléments à la carte
             cardContent.appendChild(category);
             cardContent.appendChild(link);
             cardContent.appendChild(removeButton);
@@ -175,24 +174,35 @@ document.addEventListener("DOMContentLoaded", function () {
         updateEmptyState();
     }
 
-    // Ajoute des événements de clic aux boutons wishlist
-    function attachButtonEvents() {
+    // Ajoute les événements wishlist
+    function attachWishlistEvents() {
         const buttons = document.querySelectorAll('[wl="button"]');
         buttons.forEach(button => {
-            button.addEventListener("click", () => toggleWishlist(button));
+            if (!button.hasAttribute("data-wishlist-bound")) {
+                button.setAttribute("data-wishlist-bound", "true");
+                button.addEventListener("click", () => toggleWishlist(button));
+            }
         });
     }
 
-    // Réattache les événements après lazy loading ou pagination
-    document.addEventListener("fs-cmsload", function () {
-        updateButtonState(); // Met à jour les boutons pour refléter l'état actuel de la wishlist
-        attachButtonEvents(); // Ajoute des événements aux nouveaux éléments
-    });
+    // Surveille les changements dans le conteneur CMS avec MutationObserver
+    function observeLazyLoadedContent() {
+        if (!cmsList) return;
+
+        const observer = new MutationObserver(() => {
+            console.log("Nouveaux éléments détectés via lazy loading");
+            attachWishlistEvents(); // Réattacher les événements
+            updateButtonState(); // Mettre à jour les boutons
+        });
+
+        observer.observe(cmsList, { childList: true, subtree: true });
+    }
 
     // Initialisation
-    updateButtonState();
-    updateEmptyState();
-    updateCounter();
-    renderWishlist();
-    attachButtonEvents(); // Attache les événements
+    attachWishlistEvents(); // Attache les événements initiaux
+    updateButtonState(); // Met à jour les boutons initiaux
+    updateEmptyState(); // Met à jour l'état de la wishlist
+    updateCounter(); // Met à jour le compteur
+    renderWishlist(); // Affiche les éléments dans le drawer
+    observeLazyLoadedContent(); // Surveille les contenus chargés dynamiquement
 });
