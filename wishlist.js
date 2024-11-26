@@ -151,7 +151,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const removeButton = document.createElement("div");
             removeButton.classList.add("wishlist_remove-product", "w-embed");
             removeButton.setAttribute("wl-card", "remove");
-            removeButton.setAttribute("data-tooltip", "Retirer de la wishlist");
             removeButton.innerHTML = `
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" role="img" xmlns="http://www.w3.org/2000/svg">
                     <path d="M5.5 5.5L12 12M12 12L18.5 18.5M12 12L5.5 18.5M12 12L18.5 5.5" 
