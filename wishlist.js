@@ -21,11 +21,11 @@ document.addEventListener("DOMContentLoaded", function () {
         const isFrench = lang.startsWith('fr');
         const count = wishlist.length;
 
-        if (isFrench) {
-            label.textContent = count <= 1 ? "produit ajouté :" : "produits ajoutés :";
-        } else {
-            label.textContent = count <= 1 ? "product:" : "products:";
-        }
+        const labelText = isFrench
+            ? (count <= 1 ? "produit ajouté :" : "produits ajoutés :")
+            : (count <= 1 ? "product:" : "products:");
+
+        label.textContent = ` ${labelText}`; // Remplace complètement le texte
     }
 
     // Met à jour l'état vide / CTA
@@ -39,8 +39,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Met à jour l'état des boutons et tooltips
-    function updateWishlistButtons() {
+    // Synchronise l'état des boutons wishlist sur la page principale
+    function updateButtonState() {
         const buttons = document.querySelectorAll('[wl="button"]');
         buttons.forEach(button => {
             const productId = button.getAttribute("wl-id");
@@ -87,6 +87,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (index > -1) {
             wishlist.splice(index, 1);
             localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist));
+            updateButtonState(); // Synchronise l'état des boutons
         }
     }
 
@@ -123,6 +124,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 removeFromWishlist(product.id);
                 card.remove();
                 renderWishlist(); // Met à jour la liste et l'affichage
+                updateButtonState(); // Synchronise les boutons de la page
             });
 
             drawerBody.appendChild(card);
