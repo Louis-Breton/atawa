@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const drawerBody = document.querySelector('.drawer_body[wl="list"]');
     const emptyState = document.querySelector('[wl="empty"]');
     const cta = document.querySelector('[wl="cta"]');
-    const label = document.querySelector('[wl="label"]');
+    const label = document.querySelector('[wl="counter-label"]');
 
     let wishlist = JSON.parse(localStorage.getItem(WISHLIST_KEY)) || [];
 
