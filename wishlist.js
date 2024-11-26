@@ -144,7 +144,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const link = document.createElement("a");
             link.href = product.link;
-            link.classList.add("text-secondary_950-base", "text-style-ellipsis, text-style-underline");
+            link.classList.add("text-secondary_950-base", "text-style-ellipsis", "text-style-underline");
             link.setAttribute("wl-card", "name-link");
             link.textContent = product.name;
 
