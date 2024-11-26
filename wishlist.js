@@ -144,7 +144,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const link = document.createElement("a");
             link.href = product.link;
-            link.classList.add("text-secondary_950-base", "text-style-ellipsis", "text-style-underline");
+            link.classList.add("text-secondary_950-base", "text-style-ellipsis");
             link.setAttribute("wl-card", "name-link");
             link.textContent = product.name;
 
@@ -182,6 +182,12 @@ document.addEventListener("DOMContentLoaded", function () {
             button.addEventListener("click", () => toggleWishlist(button));
         });
     }
+
+    // Réattache les événements après lazy loading ou pagination
+    document.addEventListener("fs-cmsload", function () {
+        updateButtonState(); // Met à jour les boutons pour refléter l'état actuel de la wishlist
+        attachButtonEvents(); // Ajoute des événements aux nouveaux éléments
+    });
 
     // Initialisation
     updateButtonState();
