@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", function () {
             ? (count <= 1 ? "produit ajouté :" : "produits ajoutés :")
             : (count <= 1 ? "product:" : "products:");
 
-        label.textContent = labelText; // Met à jour le contenu
+        label.textContent = ` ${labelText}`; // Remplace complètement le texte
     }
 
     // Met à jour l'état vide / CTA
@@ -121,10 +121,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // Ajout de l'événement pour supprimer un produit
             card.querySelector('[wl-card="remove"]').addEventListener("click", () => {
-                removeFromWishlist(product.id);
+                removeFromWishlist(product.id); // Met à jour la liste
                 card.remove();
-                renderWishlist(); // Met à jour la liste et l'affichage
-                updateButtonState(); // Synchronise les boutons de la page
+                renderWishlist(); // Met à jour l'affichage du drawer
+                updateButtonState(); // Synchronise les boutons de la page principale
             });
 
             drawerBody.appendChild(card);
