@@ -1,78 +1,62 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Sélection des éléments principaux
-  const container = document.querySelector('[form-element="container"]'); // Conteneur principal
-  const triggerContainer = document.querySelector('[form-element="triggers"]'); // Conteneur des triggers
-  const triggers = triggerContainer.querySelectorAll('[form-trigger]'); // Tous les triggers
+  const formContainer = document.querySelector('[form-element="container"]'); // Conteneur principal
+  const triggersContainer = document.querySelector('[form-element="triggers"]'); // Conteneur des triggers
+  const triggerButtons = triggersContainer.querySelectorAll('[form-trigger]'); // Tous les triggers
   const forms = {
     pro: document.querySelector('[form-profil="pro"]'), // Formulaire professionnel
     private: document.querySelector('[form-profil="private"]'), // Formulaire particulier
   };
-  const resetBtn = container.querySelector('[form-element="reset-btn"]'); // Bouton de réinitialisation
-  const wishlist = document.querySelector('[form-element="wishlist"]'); // Élément Wishlist
+  const resetButton = formContainer.querySelector('[form-element="reset-btn"]'); // Bouton de réinitialisation
+  const wishlistElement = document.querySelector('[form-element="wishlist"]'); // Élément Wishlist
 
-  /**
-   * Réinitialiser l'affichage à l'état par défaut
-   */
   const resetDisplay = () => {
-    container.style.display = "none"; // Cacher le conteneur principal
-    triggerContainer.style.display = "block"; // Afficher les triggers
+    formContainer.style.display = "none"; // Cacher le conteneur principal
+    triggersContainer.style.display = "block"; // Afficher les triggers
     Object.values(forms).forEach((form) => {
       if (form) form.style.display = "none"; // Cacher tous les formulaires
     });
-    // Cacher la wishlist si elle existe et si la fenêtre est inférieure à 767px
-    if (wishlist && window.innerWidth < 767) {
-      wishlist.style.display = "none";
+    if (wishlistElement && window.innerWidth < 767) {
+      wishlistElement.style.display = "none"; // Cacher la wishlist
     }
-    // Supprimer les préférences sauvegardées
-    localStorage.removeItem("formPreference");
+    localStorage.removeItem("formPreference"); // Supprimer les préférences sauvegardées
   };
 
-  /**
-   * Charger l'état sauvegardé depuis le localStorage (si disponible)
-   */
   const savedPreference = localStorage.getItem("formPreference");
   if (savedPreference && forms[savedPreference]) {
-    // Restaurer l'état précédent
-    container.style.display = "block";
-    triggerContainer.style.display = "none";
-    forms[savedPreference].style.display = "block";
+    formContainer.style.display = "block";
+    triggersContainer.style.display = "none";
+
+    // Masquer tous les formulaires et afficher uniquement celui correspondant à la préférence
+    Object.keys(forms).forEach((key) => {
+      forms[key].style.display = key === savedPreference ? "block" : "none";
+    });
+
     // Afficher la wishlist si elle n'est pas déjà cachée par un autre script
-    if (wishlist && getComputedStyle(wishlist).display !== "none") {
-      wishlist.style.display = "block";
+    if (wishlistElement && getComputedStyle(wishlistElement).display !== "none") {
+      wishlistElement.style.display = "block";
     }
   } else {
-    resetDisplay(); // Réinitialiser si aucune préférence sauvegardée
+    resetDisplay();
   }
 
-  /**
-   * Gérer les clics sur les triggers
-   */
-  triggers.forEach((trigger) => {
+  triggerButtons.forEach((trigger) => {
     trigger.addEventListener("click", () => {
-      const formType = trigger.getAttribute("form-trigger"); // Type de formulaire déclenché
+      const formType = trigger.getAttribute("form-trigger");
       if (formType && forms[formType]) {
-        // Afficher le conteneur principal et cacher les triggers
-        container.style.display = "block";
-        triggerContainer.style.display = "none"; // Cacher le conteneur parent des triggers
+        formContainer.style.display = "block";
+        triggersContainer.style.display = "none"; // Cacher le conteneur parent des triggers
         Object.keys(forms).forEach((key) => {
           forms[key].style.display = key === formType ? "block" : "none";
         });
-
-        // Afficher la wishlist si elle n'est pas déjà cachée
-        if (wishlist && getComputedStyle(wishlist).display !== "none") {
-          wishlist.style.display = "block";
+        if (wishlistElement && getComputedStyle(wishlistElement).display !== "none") {
+          wishlistElement.style.display = "block";
         }
-
-        // Sauvegarder la préférence utilisateur
         localStorage.setItem("formPreference", formType);
       }
     });
   });
 
-  /**
-   * Gérer le clic sur le bouton de réinitialisation
-   */
-  resetBtn.addEventListener("click", () => {
-    resetDisplay(); // Réinitialiser l'affichage
+  resetButton.addEventListener("click", () => {
+    resetDisplay();
   });
 });
