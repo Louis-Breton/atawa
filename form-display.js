@@ -53,9 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (formType && forms[formType]) {
         // Afficher le conteneur principal et cacher les triggers
         container.style.display = "block";
-        triggerContainer.style.display = "none";
-
-        // Afficher le formulaire sélectionné et cacher les autres
+        triggerContainer.style.display = "none"; // Cacher le conteneur parent des triggers
         Object.keys(forms).forEach((key) => {
           forms[key].style.display = key === formType ? "block" : "none";
         });
