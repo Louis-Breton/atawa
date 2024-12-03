@@ -21,6 +21,15 @@ document.addEventListener("DOMContentLoaded", function () {
     // Fonction pour sauvegarder la wishlist dans le localStorage
     function syncWishlist() {
         localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist));
+        notifyWishlistChange(); // Notifier les autres scripts
+    }
+
+    // Fonction pour notifier les autres scripts que la wishlist a été modifiée
+    function notifyWishlistChange() {
+        const event = new CustomEvent("wishlist:updated", {
+            detail: { wishlist }, // Inclure la nouvelle wishlist dans les détails
+        });
+        document.dispatchEvent(event);
     }
 
     // Fonction pour mettre à jour l'étiquette du compteur
