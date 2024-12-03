@@ -6,6 +6,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const proTextarea = document.querySelector('#brief-pro-wishlist'); // Champ textarea pro
     const privateTextarea = document.querySelector('#brief-private-wishlist'); // Champ textarea privé
     const URL_PREFIX = "https://www.atawa.com/catalogue"; // Préfixe pour les URLs
+    const counterLabel = document.querySelector('[wl-page="counter-label"]'); // Étiquette du compteur
+    const userLang = navigator.language || navigator.userLanguage; // Langue du navigateur
+    const isEnglish = userLang.startsWith('en'); // Vérifier si la langue est l'anglais
 
     if (!wishlistContainer || !cardTemplate) {
         console.warn("Conteneur wishlist ou template introuvable sur cette page.");
@@ -20,9 +23,20 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist));
     }
 
-    // Fonction pour trouver un produit par ID
-    function findProductById(productId) {
-        return wishlist.find(product => product.id === productId);
+    // Fonction pour mettre à jour l'étiquette du compteur
+    function updateCounterLabel() {
+        const count = wishlist.length;
+        if (counterLabel) {
+            if (isEnglish) {
+                counterLabel.textContent = count === 1 
+                    ? 'product in your wishlist' 
+                    : 'products in your wishlist';
+            } else {
+                counterLabel.textContent = count === 1 
+                    ? 'produit dans votre wishlist' 
+                    : 'produits dans votre wishlist';
+            }
+        }
     }
 
     // Fonction pour mettre à jour la visibilité de la section wishlist
@@ -53,11 +67,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Fonction pour mettre à jour la quantité d'un produit
     function updateProductQuantity(productId, newQuantity) {
-        const product = findProductById(productId);
+        const product = wishlist.find(product => product.id === productId);
         if (product) {
             product.quantity = newQuantity;
             syncWishlist(); // Synchronise avec le localStorage
             updateTextareas(); // Met à jour les textareas
+            updateCounterLabel(); // Met à jour l'étiquette du compteur
         }
     }
 
@@ -135,6 +150,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 renderWishlist();
                 updateWishlistVisibility();
                 updateTextareas();
+                updateCounterLabel(); // Met à jour l'étiquette
             });
 
             // Gestion des boutons de quantité
@@ -156,9 +172,10 @@ document.addEventListener("DOMContentLoaded", function () {
             wishlistContainer.innerHTML = `<p>Aucun produit dans la wishlist.</p>`;
         }
 
-        // Mettre à jour la visibilité de la section et les champs textarea
+        // Mettre à jour la visibilité de la section, les champs textarea, et l'étiquette
         updateWishlistVisibility();
         updateTextareas();
+        updateCounterLabel();
     }
 
     // Initialiser l'affichage de la wishlist
