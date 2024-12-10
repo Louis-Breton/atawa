@@ -64,16 +64,34 @@ document.addEventListener("DOMContentLoaded", function () {
     // Synchronise l'état des boutons wishlist sur la page principale
     function updateButtonState() {
         const buttons = document.querySelectorAll('[wl="button"]');
+        const lang = navigator.language || navigator.userLanguage; // Langue du navigateur
+        const isFrench = lang.startsWith('fr');
+
+        const labels = {
+            add: isFrench ? "Ajouter à ma wishlist" : "Add to my wishlist",
+            remove: isFrench ? "Retirer de ma wishlist" : "Remove from my wishlist"
+        };
+
         buttons.forEach(button => {
             const productId = button.getAttribute("wl-id");
             const isInWishlist = wishlist.some(item => item.id === productId);
 
             button.classList.toggle("is-active", isInWishlist);
+
+            // Met à jour le tooltip
             button.setAttribute(
                 "data-tooltip",
-                isInWishlist ? "Retirer de ma wishlist" : "Ajouter à ma wishlist"
+                isInWishlist ? labels.remove : labels.add
             );
+
+            // Met à jour aria-pressed
             button.setAttribute("aria-pressed", isInWishlist);
+
+            // Met à jour le texte dans la div avec wl="label"
+            const labelDiv = button.querySelector('[wl="label"]');
+            if (labelDiv) {
+                labelDiv.textContent = isInWishlist ? labels.remove : labels.add;
+            }
         });
     }
 
