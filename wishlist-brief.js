@@ -10,66 +10,66 @@ document.addEventListener("DOMContentLoaded", function () {
     const userLang = navigator.language || navigator.userLanguage; // Langue du navigateur
     const isEnglish = userLang.startsWith('en'); // Vérifier si la langue est l'anglais
 
-    if (!wishlistContainer || !cardTemplate) {
-        console.warn("Conteneur wishlist ou template introuvable sur cette page.");
-        return;
+    let wishlist;
+    try {
+        wishlist = JSON.parse(localStorage.getItem(WISHLIST_KEY)) || [];
+    } catch (error) {
+        console.error("Erreur lors du chargement de la wishlist :", error);
+        wishlist = [];
     }
-
-    // Charger la wishlist depuis le localStorage
-    let wishlist = JSON.parse(localStorage.getItem(WISHLIST_KEY) || "[]");
 
     // Fonction pour sauvegarder la wishlist dans le localStorage
     function syncWishlist() {
+        console.log("Synchronizing wishlist:", wishlist);
         localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist));
-        notifyWishlistChange(); // Notifier les autres scripts
+        notifyWishlistChange();
     }
 
     // Fonction pour notifier les autres scripts que la wishlist a été modifiée
     function notifyWishlistChange() {
         const event = new CustomEvent("wishlist:updated", {
-            detail: { wishlist }, // Inclure la nouvelle wishlist dans les détails
+            detail: { wishlist },
         });
         document.dispatchEvent(event);
+    }
+
+    // Fonction pour mettre à jour tous les compteurs
+    function updateCounters() {
+        const counters = document.querySelectorAll('[wl="counter"]');
+        counters.forEach(counter => {
+            counter.textContent = wishlist.length;
+        });
     }
 
     // Fonction pour mettre à jour l'étiquette du compteur
     function updateCounterLabel() {
         const count = wishlist.length;
         if (counterLabel) {
-            if (isEnglish) {
-                counterLabel.textContent = count === 1 
-                    ? 'product in your wishlist' 
-                    : 'products in your wishlist';
-            } else {
-                counterLabel.textContent = count === 1 
-                    ? 'produit dans votre wishlist' 
+            counterLabel.textContent = isEnglish
+                ? count === 1
+                    ? 'product in your wishlist'
+                    : 'products in your wishlist'
+                : count === 1
+                    ? 'produit dans votre wishlist'
                     : 'produits dans votre wishlist';
-            }
         }
     }
 
     // Fonction pour mettre à jour la visibilité de la section wishlist
     function updateWishlistVisibility() {
-        if (wishlist.length === 0) {
-            wishlistSection.style.display = "none";
-        } else {
-            wishlistSection.style.display = "block";
-        }
+        wishlistSection.style.display = wishlist.length === 0 ? "none" : "block";
     }
 
     // Fonction pour remplir les textareas avec le contenu de la wishlist
     function updateTextareas() {
         let summary = `${wishlist.length} produits enregistrés dans la wishlist :\n\n`;
-
         wishlist.forEach(product => {
             summary += `(${product.category})\n`; // Catégorie entre parenthèses
             summary += `[${product.quantity || 1}] ${product.name}\n`; // Quantité et nom
             summary += `${URL_PREFIX}${product.link}\n`; // URL complète
             summary += "—\n";
         });
-
         summary = summary.trimEnd().replace(/—$/, ""); // Nettoyage final
-
         if (proTextarea) proTextarea.value = summary;
         if (privateTextarea) privateTextarea.value = summary;
     }
@@ -79,9 +79,10 @@ document.addEventListener("DOMContentLoaded", function () {
         const product = wishlist.find(product => product.id === productId);
         if (product) {
             product.quantity = newQuantity;
-            syncWishlist(); // Synchronise avec le localStorage
-            updateTextareas(); // Met à jour les textareas
-            updateCounterLabel(); // Met à jour l'étiquette du compteur
+            syncWishlist();
+            updateCounters();
+            updateTextareas();
+            updateCounterLabel();
         }
     }
 
@@ -92,7 +93,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const acceleration = 30; // Réduction progressive
         const minSpeed = 30; // Vitesse minimale
 
-        // Fonction pour ajuster la quantité
         const adjustQuantity = () => {
             let currentQuantity = parseInt(quantityField.textContent, 10);
             if (action === "decrease" && currentQuantity > minQuantity) {
@@ -101,28 +101,23 @@ document.addEventListener("DOMContentLoaded", function () {
                 currentQuantity++;
             }
             quantityField.textContent = currentQuantity;
-            updateProductQuantity(productId, currentQuantity); // Met à jour le localStorage
+            updateProductQuantity(productId, currentQuantity);
         };
 
-        // Fonction pour démarrer l'ajustement progressif
         const startAdjusting = () => {
             adjustQuantity();
-            speed = Math.max(speed - acceleration, minSpeed); // Réduit progressivement la vitesse
-            interval = setTimeout(startAdjusting, speed); // Relance
-        };
-
-        // Gestion de l'événement mousedown/touchstart
-        const startEvent = (e) => {
-            e.preventDefault(); // Empêche les comportements par défaut (notamment le scroll sur mobile)
-            speed = 300; // Réinitialise la vitesse
-            adjustQuantity(); // Ajuste une première fois
+            speed = Math.max(speed - acceleration, minSpeed);
             interval = setTimeout(startAdjusting, speed);
         };
 
-        // Gestion de l'arrêt du cycle (mouseup, touchend, mouseleave)
-        const stopEvent = () => {
-            clearTimeout(interval);
+        const startEvent = (e) => {
+            e.preventDefault();
+            speed = 300;
+            adjustQuantity();
+            interval = setTimeout(startAdjusting, speed);
         };
+
+        const stopEvent = () => clearTimeout(interval);
 
         button.addEventListener("mousedown", startEvent);
         button.addEventListener("touchstart", startEvent);
@@ -133,36 +128,50 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Fonction pour rendre la wishlist dans la page
     function renderWishlist() {
-        // Vider le conteneur existant
+        console.log("Rendering wishlist with items:", wishlist);
+
+        if (!wishlistContainer || !cardTemplate) {
+            console.error("Conteneur wishlist ou template introuvable !");
+            return;
+        }
+
         wishlistContainer.innerHTML = "";
 
-        // Générer une carte pour chaque produit
+        if (wishlist.length === 0) {
+            wishlistContainer.innerHTML = `<p>Aucun produit dans la wishlist.</p>`;
+            return;
+        }
+
         wishlist.forEach(product => {
-            // Cloner le template
             const card = cardTemplate.content.cloneNode(true);
 
-            // Mettre à jour les données dans la carte
-            card.querySelector('[wl-card="image"]').src = product.image;
-            card.querySelector('[wl-card="image"]').alt = product.name;
-            card.querySelector('[wl-card="category"]').textContent = product.category;
-            card.querySelector('[wl-card="name-link"]').textContent = product.name;
-
-            // Injecter la quantité initiale
+            const imageElement = card.querySelector('[wl-card="image"]');
+            const categoryElement = card.querySelector('[wl-card="category"]');
+            const nameLinkElement = card.querySelector('[wl-card="name-link"]');
             const quantityField = card.querySelector('[quantity="value"]');
+            const removeButton = card.querySelector('[wl-card="remove"]');
+
+            if (!imageElement || !categoryElement || !nameLinkElement || !quantityField || !removeButton) {
+                console.error("Problème avec le template : certains éléments sont manquants.");
+                return;
+            }
+
+            imageElement.src = product.image;
+            imageElement.alt = product.name;
+            categoryElement.textContent = product.category;
+            nameLinkElement.textContent = product.name;
             quantityField.textContent = product.quantity || 1;
 
-            // Ajouter les événements
-            const removeButton = card.querySelector('[wl-card="remove"]');
             removeButton.addEventListener("click", () => {
                 wishlist = wishlist.filter(p => p.id !== product.id);
                 syncWishlist();
                 renderWishlist();
                 updateWishlistVisibility();
+                updateCounters();
                 updateTextareas();
-                updateCounterLabel(); // Met à jour l'étiquette
+                updateCounterLabel();
             });
 
-            // Gestion des boutons de quantité
             const decreaseButton = card.querySelector('[quantity="decrease"]');
             const increaseButton = card.querySelector('[quantity="increase"]');
             const inputWrapper = quantityField.closest('[quantity="input"]');
@@ -172,21 +181,32 @@ document.addEventListener("DOMContentLoaded", function () {
             setupQuantityAdjustment(decreaseButton, "decrease", quantityField, product.id, minQuantity, maxQuantity);
             setupQuantityAdjustment(increaseButton, "increase", quantityField, product.id, minQuantity, maxQuantity);
 
-            // Ajouter la carte au conteneur
             wishlistContainer.appendChild(card);
         });
-
-        // Si la wishlist est vide, afficher un message
-        if (wishlist.length === 0) {
-            wishlistContainer.innerHTML = `<p>Aucun produit dans la wishlist.</p>`;
-        }
-
-        // Mettre à jour la visibilité de la section, les champs textarea, et l'étiquette
-        updateWishlistVisibility();
-        updateTextareas();
-        updateCounterLabel();
     }
 
-    // Initialiser l'affichage de la wishlist
     renderWishlist();
+    updateCounters();
+    updateWishlistVisibility();
+    updateTextareas();
+    updateCounterLabel();
+
+    // Gérer les soumissions des formulaires
+    document.addEventListener('submit', (event) => {
+        const form = event.target;
+        if (form.querySelector('input[data-name="brief-pro-civilite"]') || form.querySelector('input[data-name="brief-private-civilite"]')) {
+            event.preventDefault();
+
+            const selectedRadio = form.querySelector('input[type="radio"]:checked');
+            const civilite = selectedRadio ? selectedRadio.value : '';
+
+            const nomInput = form.querySelector('input[name="brief-pro-nom"], input[name="brief-private-nom"]');
+            const nom = nomInput ? nomInput.value : '';
+
+            if (civilite && nom) {
+                localStorage.setItem('formCivilite', civilite);
+                localStorage.setItem('formNom', nom);
+            }
+        }
+    });
 });
