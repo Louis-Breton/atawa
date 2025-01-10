@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const wishlistSection = document.querySelector('.wishlist_section'); // Section wishlist
     const proTextarea = document.querySelector('#brief-pro-wishlist'); // Champ textarea pro
     const privateTextarea = document.querySelector('#brief-private-wishlist'); // Champ textarea privé
-    const URL_PREFIX = "https://www.atawa.com/catalogue"; // Préfixe pour les URLs
+    const URL_PREFIX = "https://www.atawa.com"; // Préfixe pour les URLs
     const counterLabel = document.querySelector('[wl-page="counter-label"]'); // Étiquette du compteur
     const userLang = navigator.language || navigator.userLanguage; // Langue du navigateur
     const isEnglish = userLang.startsWith('en'); // Vérifier si la langue est l'anglais
