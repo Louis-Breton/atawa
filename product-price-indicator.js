@@ -1,4 +1,4 @@
-// Fonction principale pour générer les indicateurs de prix
+// Fonction principale pour générer ou mettre à jour les indicateurs de prix
 function updatePriceIndicators() {
     // Sélectionner toutes les divs avec les attributs nécessaires
     const priceContainers = document.querySelectorAll('[product-price-level][product-price-range]');
@@ -7,6 +7,10 @@ function updatePriceIndicators() {
         // Récupérer les valeurs des attributs
         const level = parseInt(container.getAttribute('product-price-level'));
         const range = parseInt(container.getAttribute('product-price-range'));
+
+        // Vérifier si un indicateur existe déjà et en extraire la valeur
+        const existingIndicator = container.querySelector('[product-price="indicator"]');
+        const indicatorValue = existingIndicator ? existingIndicator.textContent.trim() : '';
 
         // Nettoyer les enfants existants pour éviter les doublons
         container.innerHTML = '';
@@ -22,8 +26,8 @@ function updatePriceIndicators() {
                 priceIndicator.classList.add('is-active');
             }
 
-            // Laisser le contenu initial vide ou prérempli
-            priceIndicator.textContent = container.textContent.trim() || '';
+            // Conserver la valeur de l'indicateur existant
+            priceIndicator.textContent = indicatorValue;
 
             // Ajouter l'indicateur au conteneur
             container.appendChild(priceIndicator);
