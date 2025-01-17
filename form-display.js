@@ -1,14 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Sélection des éléments principaux
-  const formContainer = document.querySelector('[form-element="container"]'); // Conteneur principal
-  const triggersContainer = document.querySelector('[form-element="triggers"]'); // Conteneur des triggers
-  const triggerButtons = triggersContainer.querySelectorAll('[form-trigger]'); // Tous les boutons de trigger
+  const formContainer = document.querySelector('[form-element="container"]');
+  const triggersContainer = document.querySelector('[form-element="triggers"]');
+  const triggerButtons = triggersContainer.querySelectorAll('[form-trigger]');
   const forms = {
-    pro: document.querySelector('[form-profil="pro"]'), // Formulaire professionnel
-    private: document.querySelector('[form-profil="private"]'), // Formulaire particulier
+    pro: document.querySelector('[form-profil="pro"]'),
+    private: document.querySelector('[form-profil="private"]'),
   };
-  const resetButton = formContainer.querySelector('[form-element="reset-btn"]'); // Bouton de réinitialisation
-  const wishlistElement = document.querySelector('[form-element="wishlist"]'); // Élément Wishlist
+  const resetButton = formContainer.querySelector('[form-element="reset-btn"]');
 
   /**
    * Réinitialise l'affichage des éléments et supprime la préférence sauvegardée.
@@ -21,15 +19,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     localStorage.removeItem("formPreference"); // Supprimer les préférences sauvegardées
     localStorage.removeItem("formPreferenceExpiration"); // Supprimer l'expiration
-  };
-
-  /**
-   * Affiche la wishlist si elle n'est pas déjà cachée par un autre script.
-   */
-  const ensureWishlistVisible = () => {
-    if (wishlistElement && getComputedStyle(wishlistElement).display === "none") {
-      wishlistElement.style.display = "block"; // Afficher la wishlist
-    }
   };
 
   /**
@@ -57,9 +46,6 @@ document.addEventListener("DOMContentLoaded", () => {
     resetDisplay(); // Réinitialiser si la préférence est expirée ou invalide
   }
 
-  // Assurer l'affichage de la wishlist par défaut
-  ensureWishlistVisible();
-
   // Gérer les clics sur les boutons de trigger
   triggerButtons.forEach((trigger) => {
     trigger.addEventListener("click", () => {
@@ -81,6 +67,5 @@ document.addEventListener("DOMContentLoaded", () => {
   // Gérer les clics sur le bouton de réinitialisation
   resetButton.addEventListener("click", () => {
     resetDisplay(); // Réinitialiser les préférences et l'affichage
-    ensureWishlistVisible(); // Assurer que la wishlist reste visible après réinitialisation
   });
 });
