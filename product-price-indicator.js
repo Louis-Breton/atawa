@@ -11,13 +11,6 @@ function updatePriceIndicators() {
         // Nettoyer les enfants existants pour éviter les doublons
         container.innerHTML = '';
 
-        // Détecter la localisation pour déterminer le symbole monétaire
-        const currencySymbol = (navigator.language || navigator.userLanguage).includes('en-GB') || navigator.language.includes('en')
-            ? '£'
-            : navigator.language.includes('de-CH') || navigator.language.includes('fr-CH')
-            ? 'CHF'
-            : '€';
-
         // Générer les indicateurs de prix
         for (let i = 1; i <= range; i++) {
             const priceIndicator = document.createElement('div');
@@ -29,8 +22,8 @@ function updatePriceIndicators() {
                 priceIndicator.classList.add('is-active');
             }
 
-            // Ajouter le symbole monétaire
-            priceIndicator.textContent = currencySymbol;
+            // Laisser le contenu initial vide ou prérempli
+            priceIndicator.textContent = container.textContent.trim() || '';
 
             // Ajouter l'indicateur au conteneur
             container.appendChild(priceIndicator);
