@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // === Sélecteurs généraux ===
   const formContainer = document.querySelector('[form-element="container"]');
   const triggersContainer = document.querySelector('[form-element="triggers"]');
   const triggerButtons = triggersContainer.querySelectorAll('[form-trigger]');
@@ -7,7 +8,34 @@ document.addEventListener("DOMContentLoaded", () => {
     private: document.querySelector('[form-profil="private"]'),
   };
   const resetButton = formContainer.querySelector('[form-element="reset-btn"]');
+  const wishlistSection = document.querySelector('[form-element="wishlist"]'); // Section wishlist
 
+  // === Gestion de la Wishlist ===
+  /**
+   * Vérifie la clé "wishlist" dans le localStorage pour afficher/masquer la section wishlist.
+   */
+  const updateWishlistVisibility = () => {
+    if (wishlistSection) {
+      const storedWishlist = localStorage.getItem("wishlist"); // Vérifie la clé "wishlist"
+      if (storedWishlist) {
+        const wishlist = JSON.parse(storedWishlist);
+        if (wishlist.length > 0) {
+          wishlistSection.style.display = "block"; // Affiche si des éléments sont présents
+          console.log("Wishlist visible, nombre d'éléments :", wishlist.length);
+        } else {
+          wishlistSection.style.display = "none"; // Cache si la wishlist est vide
+          console.log("Wishlist cachée car elle est vide.");
+        }
+      } else {
+        wishlistSection.style.display = "none"; // Cache si la clé "wishlist" n'existe pas
+        console.log("Wishlist cachée car aucune clé 'wishlist' trouvée.");
+      }
+    } else {
+      console.error("Élément wishlist introuvable.");
+    }
+  };
+
+  // === Gestion des Formulaires ===
   /**
    * Réinitialise l'affichage des éléments et supprime la préférence sauvegardée.
    */
@@ -68,4 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
   resetButton.addEventListener("click", () => {
     resetDisplay(); // Réinitialiser les préférences et l'affichage
   });
+
+  // === Initialisation ===
+  updateWishlistVisibility(); // Mise à jour de la visibilité de la wishlist
 });
