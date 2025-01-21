@@ -3,13 +3,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const WISHLIST_KEY = "wishlist"; // Clé pour accéder à la wishlist dans le localStorage
     const wishlistContainer = document.querySelector('[wl-page="list"]'); // Conteneur pour afficher les produits
     const cardTemplate = document.querySelector("#wishlist-card-template"); // Template HTML pour les cartes produit
-    const wishlistSection = document.querySelector('.wishlist_section'); // Section contenant la wishlist
+    const wishlistSection = document.querySelector('[form-element="wishlist"]'); // Section contenant la wishlist
     const proCategoryField = document.querySelector('#brief-pro-wishlist-category'); // Champ wishlist catégorie (pro)
     const proProductField = document.querySelector('#brief-pro-wishlist-product'); // Champ wishlist produit (pro)
     const privateCategoryField = document.querySelector('#brief-private-wishlist-category'); // Champ wishlist catégorie (privé)
     const privateProductField = document.querySelector('#brief-private-wishlist-product'); // Champ wishlist produit (privé)
     const URL_PREFIX = "https://www.atawa.com"; // Préfixe utilisé pour générer les URLs des produits
     const counterLabel = document.querySelector('[wl-page="counter-label"]'); // Étiquette affichant le compteur
+    const counterElement = document.querySelector('[wl="counter"]'); // Élément affichant le nombre d'éléments
     const userLang = navigator.language || navigator.userLanguage; // Langue du navigateur
     const isEnglish = userLang.startsWith('en'); // Détection si la langue est anglaise
 
@@ -18,13 +19,11 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
         wishlist = JSON.parse(localStorage.getItem(WISHLIST_KEY)) || [];
     } catch (error) {
-        console.error("Erreur lors du chargement de la wishlist :", error);
         wishlist = [];
     }
 
     // === Fonction pour synchroniser la wishlist avec le localStorage ===
     function syncWishlist() {
-        console.log("Synchronizing wishlist:", wishlist);
         localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist));
         notifyWishlistChange();
     }
@@ -43,25 +42,31 @@ document.addEventListener("DOMContentLoaded", function () {
         counters.forEach(counter => {
             counter.textContent = wishlist.length;
         });
+        updateCounterLabel(); // Mise à jour dynamique de l'étiquette
     }
 
     // === Fonction pour mettre à jour l'étiquette de compteur ===
     function updateCounterLabel() {
         const count = wishlist.length;
-        if (counterLabel) {
-            counterLabel.textContent = isEnglish
+        if (counterElement && counterLabel) {
+            const labelText = isEnglish
                 ? count === 1
-                    ? 'product in your wishlist'
-                    : 'products in your wishlist'
+                    ? 'product added:'
+                    : 'products added:'
                 : count === 1
-                    ? 'produit dans votre wishlist'
-                    : 'produits dans votre wishlist';
+                    ? 'produit ajouté :'
+                    : 'produits ajoutés :';
+            counterLabel.textContent = labelText;
         }
     }
 
-    // === Fonction pour afficher ou masquer la section wishlist ===
-    function updateWishlistVisibility() {
-        wishlistSection.style.display = wishlist.length === 0 ? "none" : "block";
+    // === Fonction pour gérer une wishlist vide ===
+    function handleEmptyWishlist() {
+        if (wishlist.length === 0 && wishlistSection) {
+            wishlistSection.style.display = "none"; // Cacher la section wishlist si elle est vide
+        } else if (wishlistSection) {
+            wishlistSection.style.display = "block"; // Afficher si des éléments sont présents
+        }
     }
 
     // === Fonction pour remplir les champs wishlist-category et wishlist-product ===
@@ -79,8 +84,6 @@ document.addEventListener("DOMContentLoaded", function () {
         // Mise à jour des champs pour le formulaire professionnel
         if (proCategoryField) proCategoryField.value = categories;
         if (proProductField) proProductField.value = products;
-
-        console.log("Champs wishlist mis à jour :", { categories, products });
     }
 
     // === Fonction pour mettre à jour la quantité d'un produit ===
@@ -91,7 +94,7 @@ document.addEventListener("DOMContentLoaded", function () {
             syncWishlist();
             updateCounters();
             updateWishlistFields();
-            updateCounterLabel();
+            handleEmptyWishlist();
         }
     }
 
@@ -137,19 +140,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // === Fonction pour afficher la wishlist ===
     function renderWishlist() {
-        console.log("Rendering wishlist with items:", wishlist);
-
         if (!wishlistContainer || !cardTemplate) {
-            console.error("Conteneur wishlist ou template introuvable !");
             return;
         }
 
         wishlistContainer.innerHTML = "";
-
-        if (wishlist.length === 0) {
-            wishlistContainer.innerHTML = `<p>Aucun produit dans la wishlist.</p>`;
-            return;
-        }
 
         wishlist.forEach(product => {
             const card = cardTemplate.content.cloneNode(true);
@@ -161,7 +156,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const removeButton = card.querySelector('[wl-card="remove"]');
 
             if (!imageElement || !categoryElement || !nameLinkElement || !quantityField || !removeButton) {
-                console.error("Problème avec le template : certains éléments sont manquants.");
                 return;
             }
 
@@ -175,10 +169,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 wishlist = wishlist.filter(p => p.id !== product.id);
                 syncWishlist();
                 renderWishlist();
-                updateWishlistVisibility();
                 updateCounters();
                 updateWishlistFields();
-                updateCounterLabel();
+                handleEmptyWishlist();
             });
 
             const decreaseButton = card.querySelector('[quantity="decrease"]');
@@ -197,7 +190,6 @@ document.addEventListener("DOMContentLoaded", function () {
     // === Initialisation ===
     renderWishlist();
     updateCounters();
-    updateWishlistVisibility();
     updateWishlistFields();
-    updateCounterLabel();
+    handleEmptyWishlist();
 });
