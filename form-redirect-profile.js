@@ -27,12 +27,36 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Fonction pour enregistrer la civilité et le nom dans le localStorage
+    const saveToLocalStorage = (form) => {
+        let civilite = "";
+        let nom = "";
+
+        // Vérifie quel formulaire est soumis et récupère les valeurs
+        if (form.id === "wf-form-brief-pro") {
+            civilite = form.querySelector('[name="brief-pro-civilite"]:checked')?.value || "";
+            nom = form.querySelector('#brief-pro-last-name')?.value.trim() || "";
+        } else if (form.id === "wf-form-brief-private") {
+            civilite = form.querySelector('[name="brief-private-civilite"]:checked')?.value || "";
+            nom = form.querySelector('#brief-private-last-name')?.value.trim() || "";
+        }
+
+        // Enregistre les valeurs dans le localStorage
+        if (civilite && nom) {
+            localStorage.setItem("formCivilite", civilite);
+            localStorage.setItem("formNom", nom);
+        }
+    };
+
     // Fonction de redirection
     const handleFormSubmit = (event) => {
         event.preventDefault(); // Empêche la soumission native
         const form = event.target; // Le formulaire soumis
         const formId = form.getAttribute("id"); // Récupère l'ID du formulaire
         const formMapping = redirectMappings[formId]; // Trouve le mapping correspondant
+
+        // Enregistre les données dans le localStorage
+        saveToLocalStorage(form);
 
         if (formMapping) {
             // Trouve le champ <select> dans le formulaire
