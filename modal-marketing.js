@@ -8,11 +8,16 @@
   const modals = document.querySelectorAll('[modal="list"]');
   const cornerBanner = document.querySelector('[modal="corner-banner"]');
   const popupModal = document.querySelector('[modal="popup"]');
+  const cornerElements = cornerBanner?.querySelectorAll('[modal="corner-banner-element"]') || [];
+  const popupElements = popupModal?.querySelectorAll('[modal="popup-element"]') || [];
   const cornerCloseTriggers = document.querySelectorAll('[modal-close="corner-banner"]');
   const popupCloseTriggers = document.querySelectorAll('[modal-close="popup"]');
 
   let inactivityTimer;
   let popupShown = false;
+
+  // Arrête le script si aucun modal="list" n'est présent
+  if (!modals || modals.length === 0) return;
 
   // Vérifie si un cookie empêche l'affichage d'une modale spécifique
   const isCookieSet = (modal) => {
@@ -74,7 +79,7 @@
   };
 
   const onMouseLeave = (event) => {
-    if (event.clientY <= 0 && !popupShown && cornerBanner.style.display !== 'block') {
+    if (event.clientY <= 0 && !popupShown && cornerBanner?.style.display !== 'block') {
       popupShown = true;
       fadeIn(popupModal, 'flex');
     }
@@ -82,7 +87,7 @@
 
   const resetInactivityTimer = () => {
     clearTimeout(inactivityTimer);
-    if (!popupShown && cornerBanner.style.display !== 'block') {
+    if (!popupShown && cornerBanner?.style.display !== 'block') {
       inactivityTimer = setTimeout(() => {
         popupShown = true;
         fadeIn(popupModal, 'flex');
@@ -90,7 +95,7 @@
     }
   };
 
-  if (!isCookieSet('corner-banner') && window.innerWidth >= 768) {
+  if (cornerBanner && cornerElements.length > 0 && !isCookieSet('corner-banner') && window.innerWidth >= 768) {
     checkCookieExpiry('corner-banner');
     // Affiche la bannière corner après 5 secondes si l'écran est >= 768px
     setTimeout(() => {
@@ -98,7 +103,7 @@
     }, CORNER_BANNER_DELAY);
   }
 
-  if (!isCookieSet('popup')) {
+  if (popupModal && popupElements.length > 0 && !isCookieSet('popup')) {
     checkCookieExpiry('popup');
 
     // Gère l'inactivité de l'utilisateur
