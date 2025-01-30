@@ -1,93 +1,48 @@
-document.addEventListener("DOMContentLoaded", () => {
-    // Tableau de correspondance pour les formulaires
-    const redirectMappings = {
-        "wf-form-brief-pro": {
-            "brief-pro-budget": {
-                "< 3 000 €": "Professionnel_1",
-                "3 000 > 5 000 €": "Professionnel_2",
-                "5 000 > 10 000 €": "Professionnel_3",
-                "10 000 > 20 000 €": "Professionnel_4",
-                "20 000 > 50 000 €": "Professionnel_5",
-                "50 000 > 100 000 €": "Professionnel_6",
-                "100 000 > 200 000 €": "Professionnel_7",
-                "> 200 000 €": "Professionnel_8"
-            }
-        },
-        "wf-form-brief-private": {
-            "brief-private-budget": {
-                "< 3 000 €": "Particulier_1",
-                "3 000 > 5 000 €": "Particulier_2",
-                "5 000 > 10 000 €": "Particulier_3",
-                "10 000 > 20 000 €": "Particulier_4",
-                "20 000 > 50 000 €": "Particulier_5",
-                "50 000 > 100 000 €": "Particulier_6",
-                "100 000 > 200 000 €": "Particulier_7",
-                "> 200 000 €": "Particulier_8"
-            }
-        }
-    };
+// Fonction pour enregistrer uniquement les valeurs du formulaire soumis dans le sessionStorage
+const saveToSessionStorage = (form) => {
+    let civilite = "";
+    let nom = "";
+    let budget = "";
+    let formType = "";
 
-    // Fonction pour enregistrer la civilité et le nom dans le localStorage
-    const saveToLocalStorage = (form) => {
-        let civilite = "";
-        let nom = "";
+    // Détermine le type de formulaire et récupère les valeurs correspondantes
+    if (form.id === "wf-form-brief-pro") {
+        civilite = form.querySelector('[name="brief-pro-civilite"]:checked')?.value || "";
+        nom = form.querySelector('#brief-pro-last-name')?.value.trim() || "";
+        budget = form.querySelector('[name="brief-pro-budget"]')?.value || "";
+        formType = "Professionnel";
+    } else if (form.id === "wf-form-brief-private") {
+        civilite = form.querySelector('[name="brief-private-civilite"]:checked')?.value || "";
+        nom = form.querySelector('#brief-private-last-name')?.value.trim() || "";
+        budget = form.querySelector('[name="brief-private-budget"]')?.value || "";
+        formType = "Particulier";
+    }
 
-        // Vérifie quel formulaire est soumis et récupère les valeurs
-        if (form.id === "wf-form-brief-pro") {
-            civilite = form.querySelector('[name="brief-pro-civilite"]:checked')?.value || "";
-            nom = form.querySelector('#brief-pro-last-name')?.value.trim() || "";
-        } else if (form.id === "wf-form-brief-private") {
-            civilite = form.querySelector('[name="brief-private-civilite"]:checked')?.value || "";
-            nom = form.querySelector('#brief-private-last-name')?.value.trim() || "";
-        }
+    // Vérifier si on doit supprimer une ancienne valeur non mise à jour
+    if (!budget) {
+        sessionStorage.removeItem("formBudget");
+    }
 
-        // Enregistre les valeurs dans le localStorage
-        if (civilite && nom) {
-            localStorage.setItem("formCivilite", civilite);
-            localStorage.setItem("formNom", nom);
-        }
-    };
+    // Enregistre uniquement les nouvelles valeurs du formulaire soumis
+    if (formType) {
+        sessionStorage.setItem("formType", formType);
+    }
+    if (civilite) {
+        sessionStorage.setItem("formCivilite", civilite);
+    }
+    if (nom) {
+        sessionStorage.setItem("formNom", nom);
+    }
+    if (budget) {
+        sessionStorage.setItem("formBudget", budget);
+    }
+};
 
-    // Fonction de redirection
-    const handleFormSubmit = (event) => {
-        event.preventDefault(); // Empêche la soumission native
-        const form = event.target; // Le formulaire soumis
-        const formId = form.getAttribute("id"); // Récupère l'ID du formulaire
-        const formMapping = redirectMappings[formId]; // Trouve le mapping correspondant
+// Ajout d'un écouteur d'événement pour détecter la soumission des formulaires
+document.addEventListener("submit", (event) => {
+    const form = event.target;
 
-        // Enregistre les données dans le localStorage
-        saveToLocalStorage(form);
-
-        if (formMapping) {
-            // Trouve le champ <select> dans le formulaire
-            const selectName = Object.keys(formMapping)[0];
-            const selectElement = form.querySelector(`#${selectName}, [name="${selectName}"]`);
-
-            if (selectElement) {
-                const selectedValue = selectElement.value.trim(); // Récupère la valeur sélectionnée
-                const profil = formMapping[selectName][selectedValue]; // Correspondance du profil
-
-                if (profil) {
-                    // Détecte automatiquement le répertoire de langue
-                    const languageDirectory = window.location.pathname.split('/')[1]; // Extrait "fr", "en", etc.
-
-                    // URL de redirection
-                    const redirectUrl = `/${languageDirectory}/lp/merci-brief/?profil=${profil}`;
-
-                    // Redirection avec un délai
-                    setTimeout(() => {
-                        window.location.href = redirectUrl;
-                    }, 100); // 200ms de délai
-                }
-            }
-        }
-    };
-
-    // Ajout des écouteurs d'événements pour chaque formulaire
-    Object.keys(redirectMappings).forEach((formId) => {
-        const form = document.getElementById(formId);
-        if (form) {
-            form.addEventListener("submit", handleFormSubmit);
-        }
-    });
+    if (form.id === "wf-form-brief-pro" || form.id === "wf-form-brief-private") {
+        saveToSessionStorage(form);
+    }
 });
