@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // Gestion des switchs pour les wrappers
     const wrappers = document.querySelectorAll('[date-switch="wrapper"]');
 
     wrappers.forEach((wrapper, index) => {
@@ -106,22 +107,20 @@ document.addEventListener("DOMContentLoaded", () => {
         observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ["style", "class"] });
     });
 
-    // Configuration des datepickers
+    // 📅 Configuration du double DatePicker
     const userLang = navigator.language || navigator.userLanguage;
     const isFrench = userLang.startsWith('fr');
 
-    document.querySelectorAll('input[daterange="start"], input[daterange="end"]').forEach((input) => {
-        $(input).daterangepicker({
-            singleDatePicker: true,
-            autoUpdateInput: false,
-            locale: {
-                format: isFrench ? 'DD/MM/YYYY' : 'MM/DD/YYYY',
-                cancelLabel: isFrench ? 'Annuler' : 'Cancel',
-                applyLabel: isFrench ? 'Enregistrer' : 'Apply'
-            }
-        }, function (selectedDate) {
-            $(input).val(selectedDate.format(isFrench ? 'DD/MM/YYYY' : 'MM/DD/YYYY'));
-        });
+    $('input[daterange="start"], input[daterange="end"]').daterangepicker({
+        opens: 'left',
+        autoUpdateInput: false,
+        locale: {
+            format: isFrench ? 'DD/MM/YYYY' : 'MM/DD/YYYY',
+            cancelLabel: isFrench ? 'Annuler' : 'Cancel',
+            applyLabel: isFrench ? 'Enregistrer' : 'Apply'
+        }
+    }, function (start, end) {
+        $('input[daterange="start"]').val(start.format(isFrench ? 'DD/MM/YYYY' : 'MM/DD/YYYY'));
+        $('input[daterange="end"]').val(end.format(isFrench ? 'DD/MM/YYYY' : 'MM/DD/YYYY'));
     });
-
 });
