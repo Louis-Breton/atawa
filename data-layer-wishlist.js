@@ -1,62 +1,55 @@
-// Fonction de gestion des boutons wishlist
-function handleWishlistButtons() {
-  const wishlistButtons = document.querySelectorAll('[wl-event="add_to_wishlist"]');
+(function() {
+  const WISHLIST_KEY = "wishlist";
 
-  wishlistButtons.forEach(button => {
-    // Empêche l'ajout multiple de listeners
-    if (button.dataset.wishlistHandled) return;
+  function getWishlistItems() {
+    try {
+      return JSON.parse(localStorage.getItem(WISHLIST_KEY)) || [];
+    } catch (e) {
+      console.error("Erreur de parsing de la wishlist :", e);
+      return [];
+    }
+  }
 
-    button.dataset.wishlistHandled = true; // Marque ce bouton comme géré
+  function detectWishlistChange(event) {
+    if (event.key !== WISHLIST_KEY) return; // Ignorer les autres modifications du localStorage
 
-    button.addEventListener('click', function () {
-      const product = this.closest('[wl="product"]');
-      const itemId = product.getAttribute('wl-id');
-      const itemName = product.querySelector('[wl="name"]').textContent.trim();
-      const itemCategory = product.querySelector('[wl="category"]').textContent.trim();
-      const isActive = this.classList.contains('is-active');
-      const eventName = isActive ? 'remove_from_wishlist' : 'add_to_wishlist';
+    const oldWishlist = getWishlistItems();
+    const newWishlist = event.newValue ? JSON.parse(event.newValue) : [];
 
-      window.dataLayer.push({
-        event: eventName,
-        items: [
-          {
-            item_id: itemId,
-            item_name: itemName,
-            item_category: itemCategory,
-          }
-        ]
-      });
+    if (!Array.isArray(newWishlist)) return; // Vérification de type
 
-      console.log(`Produit ${isActive ? 'retiré de' : 'ajouté à'} la wishlist :`, {
-        item_id: itemId,
-        item_name: itemName,
-        item_category: itemCategory,
-      });
+    // Comparaison rapide
+    const oldIds = new Set(oldWishlist.map(item => item.id));
+    const newIds = new Set(newWishlist.map(item => item.id));
+
+    const addedItems = newWishlist.filter(item => !oldIds.has(item.id));
+    const removedItems = oldWishlist.filter(item => !newIds.has(item.id));
+
+    if (addedItems.length > 0) {
+      sendWishlistEvent("add_to_wishlist", addedItems);
+    }
+
+    if (removedItems.length > 0) {
+      sendWishlistEvent("remove_from_wishlist", removedItems);
+    }
+  }
+
+  function sendWishlistEvent(action, items) {
+    if (items.length === 0) return;
+
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: action,
+      items: items.map(item => ({
+        item_id: item.id,
+        item_name: item.name,
+        item_category: item.category
+      }))
     });
-  });
-}
 
-// Fonction pour observer les ajouts au DOM
-function observeLazyLoadForWishlist() {
-  const observer = new MutationObserver(mutations => {
-    mutations.forEach(mutation => {
-      mutation.addedNodes.forEach(node => {
-        if (
-          node.nodeType === Node.ELEMENT_NODE &&
-          node.matches &&
-          node.matches('[wl="product"]')
-        ) {
-          handleWishlistButtons(); // Réexécute pour le nouveau produit
-        }
-      });
-    });
-  });
+    console.log(`Produits ${action === "add_to_wishlist" ? "ajoutés" : "retirés"} de la wishlist :`, items);
+  }
 
-  observer.observe(document.body, { childList: true, subtree: true });
-}
-
-// Exécuter les fonctions
-document.addEventListener('DOMContentLoaded', () => {
-  handleWishlistButtons(); // Gérer les produits déjà présents
-  observeLazyLoadForWishlist(); // Observer les produits ajoutés dynamiquement
-});
+  // Détection des changements de wishlist en direct
+  window.addEventListener("storage", detectWishlistChange);
+})();
