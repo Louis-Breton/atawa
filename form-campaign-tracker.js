@@ -1,130 +1,70 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const PARAMS_EXPIRATION_TIME = 3 * 60 * 60 * 1000; // 3 heures en millisecondes
-
-    // === Fonction pour capturer directement les informations utilisateur ===
-    const userInfo = {
-        browserLanguage: navigator.language || navigator.userLanguage,
-        deviceType: /Mobile|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop',
-        screenResolution: `${window.screen.width}x${window.screen.height}`,
-        languageRegion: (() => {
-            const languageSegment = window.location.pathname.split('/')[1];
-            const languageMap = {
-                'fr': 'Français',
-                'en': 'Anglais',
-                'fr-ch': 'Suisse français',
-                'en-ch': 'Suisse anglais',
-                'uk': 'Royaume-Uni'
-            };
-            return languageMap[languageSegment] || 'Non spécifié';
-        })()
-    };
-
-    // === Fonction pour obtenir les paramètres d'URL ===
-    const getUrlParams = () => {
-        const params = new URLSearchParams(window.location.search);
+document.addEventListener("DOMContentLoaded", function () {
+    // Fonction pour récupérer les informations du navigateur
+    function getBrowserInfo() {
         return {
-            gclid: params.get('gclid') || '',
-            camp: params.get('camp') || '',
-            adgroup: params.get('adgroup') || '',
-            utm_term: params.get('utm_term') || '',
-            utm_campaign: params.get('utm_campaign') || '',
-            utm_source: params.get('utm_source') || ''
+            "browser-language": navigator.language || navigator.userLanguage,
+            "device-type": /Mobile|Android|iP(hone|od|ad)/i.test(navigator.userAgent) ? "Mobile" : "Desktop",
+            "screen-resolution": `${window.screen.width}x${window.screen.height}`,
+            "language-region": Intl.DateTimeFormat().resolvedOptions().locale || navigator.language
         };
-    };
+    }
 
-    // === Fonction pour enregistrer les paramètres dans le localStorage ===
-    const saveParamsToLocalStorage = (params) => {
-        const timestampedParams = {
-            ...params,
-            timestamp: Date.now()
+    // Fonction pour récupérer les paramètres depuis l'URL
+    function getUTMFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return {
+            "ads-gclid": urlParams.get("gclid") || "",
+            "ads-camp": urlParams.get("utm_campaign") || "",
+            "ads-adgroup": urlParams.get("utm_adgroup") || "",
+            "ads-utm-term": urlParams.get("utm_term") || "",
+            "ads-utm-campaign": urlParams.get("utm_campaign") || "",
+            "ads-utm-source": urlParams.get("utm_source") || ""
         };
-        localStorage.setItem('formParams', JSON.stringify(timestampedParams));
-    };
+    }
 
-    // === Fonction pour récupérer les paramètres depuis le localStorage ===
-    const getParamsFromLocalStorage = () => {
-        const savedParams = JSON.parse(localStorage.getItem('formParams')) || {};
-        const isExpired = savedParams.timestamp && (Date.now() - savedParams.timestamp > PARAMS_EXPIRATION_TIME);
-        return isExpired ? {} : savedParams;
-    };
+    // Fonction pour récupérer les UTM du localStorage
+    function getUTMFromStorage() {
+        try {
+            const storedUTM = localStorage.getItem("utm_tracking");
+            if (storedUTM) {
+                const parsedData = JSON.parse(storedUTM);
+                return {
+                    "ads-utm-source": parsedData.data["utm_source"] || "",
+                    "ads-utm-campaign": parsedData.data["utm_campaign"] || "",
+                    "ads-utm-term": parsedData.data["utm_term"] || ""
+                };
+            }
+        } catch (e) {
+            console.warn("Erreur de lecture des UTM depuis le localStorage", e);
+        }
+        return {};
+    }
 
-    // === Fonction pour remplir les champs cachés ===
-    const fillHiddenFields = (formId, prefix, params) => {
+    // Fonction pour remplir dynamiquement les champs cachés dans un formulaire
+    function fillHiddenFields(formId, data) {
         const form = document.getElementById(formId);
         if (!form) return;
 
-        // Mapping pour les paramètres d'URL
-        const urlFieldMappings = {
-            gclid: `${prefix}-ads-gclid`,
-            camp: `${prefix}-ads-camp`,
-            adgroup: `${prefix}-ads-adgroup`,
-            utm_term: `${prefix}-ads-utm-term`,
-            utm_campaign: `${prefix}-ads-utm-campaign`,
-            utm_source: `${prefix}-ads-utm-source`
-        };
-
-        // Mapping pour les informations utilisateur
-        const userFieldMappings = {
-            'browser-language': userInfo.browserLanguage,
-            'device-type': userInfo.deviceType,
-            'screen-resolution': userInfo.screenResolution,
-            'language-region': userInfo.languageRegion
-        };
-
-        // Remplissage des champs URL
-        Object.entries(urlFieldMappings).forEach(([key, fieldId]) => {
-            const input = form.querySelector(`#${fieldId}`);
-            if (input) input.value = params[key] || '';
+        Object.keys(data).forEach(key => {
+            const field = form.querySelector(`input[name="brief-${formId.split('-').pop()}-${key}"]`);
+            if (field) {
+                field.value = data[key];
+            }
         });
-
-        // Remplissage des champs utilisateur
-        Object.entries(userFieldMappings).forEach(([key, value]) => {
-            const input = form.querySelector(`#${prefix}-${key}`);
-            if (input) input.value = value;
-        });
-    };
-
-    // === Assurer l'injection avant soumission ===
-    const ensureFieldsBeforeSubmit = (formId, prefix, params) => {
-        const form = document.getElementById(formId);
-        if (form) {
-            form.addEventListener('submit', () => {
-                fillHiddenFields(formId, prefix, params); // Remplir à nouveau les champs avant soumission
-            });
-        }
-    };
-
-    // === Gestion des paramètres URL et localStorage ===
-    const urlParams = getUrlParams();
-    if (Object.values(urlParams).some(value => value)) {
-        saveParamsToLocalStorage(urlParams);
     }
 
-    const storedParams = getParamsFromLocalStorage();
-    const paramsToUse = Object.values(urlParams).some(value => value) ? urlParams : storedParams;
+    // Appliquer les données aux formulaires
+    function applyDataToForms() {
+        const browserInfo = getBrowserInfo();
+        const utmFromURL = getUTMFromURL();
+        const utmFromStorage = getUTMFromStorage();
 
-    // === Application des valeurs aux formulaires ===
-    const applyToForms = () => {
-        fillHiddenFields('wf-form-brief-pro', 'brief-pro', paramsToUse);
-        fillHiddenFields('wf-form-brief-private', 'brief-private', paramsToUse);
-    };
+        const combinedData = { ...browserInfo, ...utmFromURL, ...utmFromStorage };
 
-    // === Gestion des formulaires dynamiques ===
-    const observer = new MutationObserver(() => {
-        if (document.getElementById('wf-form-brief-pro') && document.getElementById('wf-form-brief-private')) {
-            applyToForms();
-            observer.disconnect(); // Arrête l'observation
-        }
-    });
-
-    // Si les formulaires ne sont pas encore chargés
-    if (!document.getElementById('wf-form-brief-pro') || !document.getElementById('wf-form-brief-private')) {
-        observer.observe(document.body, { childList: true, subtree: true });
-    } else {
-        applyToForms();
+        fillHiddenFields("wf-form-brief-pro", combinedData);
+        fillHiddenFields("wf-form-brief-private", combinedData);
     }
 
-    // Assurer l'injection avant soumission
-    ensureFieldsBeforeSubmit('wf-form-brief-pro', 'brief-pro', paramsToUse);
-    ensureFieldsBeforeSubmit('wf-form-brief-private', 'brief-private', paramsToUse);
+    // Exécuter l'ajout des données
+    applyDataToForms();
 });
