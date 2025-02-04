@@ -1,75 +1,63 @@
-
 document.addEventListener("DOMContentLoaded", function () {
-    function getUrlParams() {
-        const params = new URLSearchParams(window.location.search);
+    function getBrowserInfo() {
         return {
-            gclid: params.get("gclid") || "",
-            utm_source: params.get("utm_source") || "",
-            utm_medium: params.get("utm_medium") || "",
-            utm_campaign: params.get("utm_campaign") || "",
-            utm_term: params.get("utm_term") || "",
-            utm_adgroup: params.get("utm_adgroup") || "",
-            utm_camp: params.get("utm_camp") || ""
+            "browser-language": navigator.language || navigator.userLanguage,
+            "device-type": /Mobile|Android|iP(hone|od|ad)/i.test(navigator.userAgent) ? "Mobile" : "Desktop",
+            "screen-resolution": `${window.screen.width}x${window.screen.height}`,
+            "language-region": Intl.DateTimeFormat().resolvedOptions().locale || navigator.language
         };
     }
 
-    function getLocalStorageParams() {
+    function getUTMFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return {
+            "ads-gclid": urlParams.get("gclid") || "",
+            "ads-camp": urlParams.get("utm_campaign") || "",
+            "ads-adgroup": urlParams.get("utm_adgroup") || "",
+            "ads-utm-term": urlParams.get("utm_term") || "",
+            "ads-utm-campaign": urlParams.get("utm_campaign") || "",
+            "ads-utm-source": urlParams.get("utm_source") || ""
+        };
+    }
+
+    function getUTMFromStorage() {
         try {
-            const utmTracking = JSON.parse(localStorage.getItem("utm_tracking")) || {};
-            return {
-                gclid: utmTracking.gclid || "",
-                utm_source: utmTracking.data?.utm_source || "",
-                utm_medium: utmTracking.data?.utm_medium || "",
-                utm_campaign: utmTracking.data?.utm_campaign || "",
-                utm_term: utmTracking.data?.utm_term || "",
-                utm_adgroup: utmTracking.data?.utm_adgroup || "",
-                utm_camp: utmTracking.data?.utm_camp || ""
-            };
-        } catch (e) {
-            return {};
-        }
+            const storedUTM = localStorage.getItem("utm_tracking");
+            if (storedUTM) {
+                const parsedData = JSON.parse(storedUTM);
+                return {
+                    "ads-gclid": parsedData.data["gclid"] || "",
+                    "ads-utm-source": parsedData.data["utm_source"] || "",
+                    "ads-utm-campaign": parsedData.data["utm_campaign"] || "",
+                    "ads-utm-term": parsedData.data["utm_term"] || ""
+                };
+            }
+        } catch (e) {}
+        return {};
     }
 
-    function setHiddenField(id, value) {
-        const field = document.getElementById(id);
-        if (field) field.value = value;
+    function fillHiddenFields(formId, data) {
+        const form = document.getElementById(formId);
+        if (!form) return;
+
+        Object.keys(data).forEach(key => {
+            const field = form.querySelector(`input[name="brief-${formId.split('-').pop()}-${key}"]`);
+            if (field) {
+                field.value = data[key];
+            }
+        });
     }
 
-    function detectDeviceType() {
-        return /Mobi|Android|iPhone/i.test(navigator.userAgent) ? "mobile" : "desktop";
+    function applyDataToForms() {
+        const browserInfo = getBrowserInfo();
+        const utmFromURL = getUTMFromURL();
+        const utmFromStorage = getUTMFromStorage();
+
+        const combinedData = { ...browserInfo, ...utmFromURL, ...utmFromStorage };
+
+        fillHiddenFields("wf-form-brief-pro", combinedData);
+        fillHiddenFields("wf-form-brief-private", combinedData);
     }
 
-    function getScreenResolution() {
-        return `${window.screen.width}x${window.screen.height}`;
-    }
-
-    function getBrowserLanguage() {
-        return navigator.language || navigator.userLanguage;
-    }
-
-    function getLanguageRegion() {
-        return getBrowserLanguage().split("-")[0];
-    }
-
-    function populateFields(prefix) {
-        const urlParams = getUrlParams();
-        const storageParams = getLocalStorageParams();
-
-        setHiddenField(`${prefix}-browser-language`, getBrowserLanguage());
-        setHiddenField(`${prefix}-device-type`, detectDeviceType());
-        setHiddenField(`${prefix}-screen-resolution`, getScreenResolution());
-        setHiddenField(`${prefix}-language-region`, getLanguageRegion());
-
-        setHiddenField(`${prefix}-ads-gclid`, urlParams.gclid || storageParams.gclid);
-        setHiddenField(`${prefix}-ads-utm-source`, urlParams.utm_source || storageParams.utm_source);
-        setHiddenField(`${prefix}-ads-utm-medium`, urlParams.utm_medium || storageParams.utm_medium);
-        setHiddenField(`${prefix}-ads-utm-campaign`, urlParams.utm_campaign || storageParams.utm_campaign);
-        setHiddenField(`${prefix}-ads-utm-term`, urlParams.utm_term || storageParams.utm_term);
-        setHiddenField(`${prefix}-ads-adgroup`, urlParams.utm_adgroup || storageParams.utm_adgroup);
-        setHiddenField(`${prefix}-ads-utm-camp`, urlParams.utm_camp || storageParams.utm_camp);
-    }
-
-    // Remplit les champs pour "brief-pro" et "brief-private"
-    populateFields("brief-pro");
-    populateFields("brief-private");
+    applyDataToForms();
 });
