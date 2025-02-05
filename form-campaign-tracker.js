@@ -1,4 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
+    /**
+     * Récupère les informations du navigateur (langue, type d'appareil, résolution d'écran)
+     */
     function getBrowserInfo() {
         return {
             "browser-language": navigator.language || navigator.userLanguage,
@@ -8,6 +11,9 @@ document.addEventListener("DOMContentLoaded", function () {
         };
     }
 
+    /**
+     * Extrait les paramètres UTM depuis l'URL
+     */
     function getUTMFromURL() {
         const urlParams = new URLSearchParams(window.location.search);
         return {
@@ -20,6 +26,30 @@ document.addEventListener("DOMContentLoaded", function () {
         };
     }
 
+    /**
+     * Détermine la source du trafic à partir de document.referrer
+     */
+    function getReferrerSource() {
+        let referrer = document.referrer;
+        let source = "Direct"; // Par défaut si aucun referrer
+
+        if (referrer.includes("google.")) {
+            source = "Google Organic";
+        } else if (referrer.includes("facebook.")) {
+            source = "Facebook";
+        } else if (referrer !== "") {
+            try {
+                source = "Referral (" + new URL(referrer).hostname + ")";
+            } catch (e) {
+                source = "Unknown";
+            }
+        }
+        return source;
+    }
+
+    /**
+     * Récupère les UTM et la source du trafic depuis localStorage
+     */
     function getUTMFromStorage() {
         try {
             const storedUTM = localStorage.getItem("utm_tracking");
@@ -29,13 +59,17 @@ document.addEventListener("DOMContentLoaded", function () {
                     "ads-gclid": parsedData.data["gclid"] || "",
                     "ads-utm-source": parsedData.data["utm_source"] || "",
                     "ads-utm-campaign": parsedData.data["utm_campaign"] || "",
-                    "ads-utm-term": parsedData.data["utm_term"] || ""
+                    "ads-utm-term": parsedData.data["utm_term"] || "",
+                    "document-referrer": parsedData.data["document-referrer"] || getReferrerSource()
                 };
             }
         } catch (e) {}
-        return {};
+        return { "document-referrer": getReferrerSource() };
     }
 
+    /**
+     * Remplit les champs cachés des formulaires avec les données collectées
+     */
     function fillHiddenFields(formId, data) {
         const form = document.getElementById(formId);
         if (!form) return;
@@ -46,8 +80,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 field.value = data[key];
             }
         });
+
+        // Ajoute la valeur du referer dans les champs dédiés
+        const referrerField = form.querySelector(`input[name="brief-${formId.split('-').pop()}-document-referrer"]`);
+        if (referrerField) {
+            referrerField.value = data["document-referrer"];
+        }
     }
 
+    /**
+     * Applique les données aux formulaires en combinant toutes les sources
+     */
     function applyDataToForms() {
         const browserInfo = getBrowserInfo();
         const utmFromURL = getUTMFromURL();
@@ -59,5 +102,6 @@ document.addEventListener("DOMContentLoaded", function () {
         fillHiddenFields("wf-form-brief-private", combinedData);
     }
 
+    // Exécution du script
     applyDataToForms();
 });
