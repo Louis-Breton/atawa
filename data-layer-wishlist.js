@@ -10,13 +10,10 @@
     }
   }
 
-  function detectWishlistChange(event) {
-    if (event.key !== WISHLIST_KEY) return; // Ignorer les autres changements de localStorage
-
+  function detectWishlistChange(newWishlist) {
     const oldWishlist = getWishlistItems();
-    const newWishlist = event.newValue ? JSON.parse(event.newValue) : [];
 
-    if (!Array.isArray(newWishlist)) return; // Vérification de type
+    if (!Array.isArray(newWishlist)) return;
 
     const oldIds = new Set(oldWishlist.map(item => item.id));
     const newIds = new Set(newWishlist.map(item => item.id));
@@ -25,12 +22,12 @@
     const removedItems = oldWishlist.filter(item => !newIds.has(item.id));
 
     if (addedItems.length > 0) {
-      console.log("Produit ajouté à la wishlist :", addedItems);
+      console.log("Produits ajoutés à la wishlist :", addedItems);
       sendWishlistEvent("add_to_wishlist", addedItems);
     }
 
     if (removedItems.length > 0) {
-      console.log("Produit retiré de la wishlist :", removedItems);
+      console.log("Produits retirés de la wishlist :", removedItems);
       sendWishlistEvent("remove_from_wishlist", removedItems);
     }
   }
@@ -51,6 +48,17 @@
     console.log(`Événement envoyé : ${action}`, items);
   }
 
-  // Détection des changements de wishlist en direct
-  window.addEventListener("storage", detectWishlistChange);
+  // Interception des modifications du localStorage dans le même onglet
+  (function() {
+    const originalSetItem = localStorage.setItem;
+    localStorage.setItem = function(key, value) {
+      if (key === WISHLIST_KEY) {
+        const newWishlist = JSON.parse(value);
+        detectWishlistChange(newWishlist);
+      }
+      originalSetItem.apply(this, arguments);
+    };
+  })();
+
+  console.log("Surveillance de la wishlist activée !");
 })();
