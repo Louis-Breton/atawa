@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
     /**
-     * Récupère les informations du navigateur (langue, type d'appareil, résolution d'écran)
+     * Fonction pour récupérer les informations du navigateur (langue, appareil, résolution)
      */
     function getBrowserInfo() {
         return {
@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     /**
-     * Extrait les paramètres UTM depuis l'URL
+     * Fonction pour récupérer les paramètres UTM depuis l'URL
      */
     function getUTMFromURL() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -27,28 +27,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     /**
-     * Détermine la source du trafic à partir de document.referrer
-     */
-    function getReferrerSource() {
-        let referrer = document.referrer;
-        let source = "Direct"; // Par défaut si aucun referrer
-
-        if (referrer.includes("google.")) {
-            source = "Google Organic";
-        } else if (referrer.includes("facebook.")) {
-            source = "Facebook";
-        } else if (referrer !== "") {
-            try {
-                source = "Referral (" + new URL(referrer).hostname + ")";
-            } catch (e) {
-                source = "Unknown";
-            }
-        }
-        return source;
-    }
-
-    /**
-     * Récupère les UTM et la source du trafic depuis localStorage
+     * Fonction pour récupérer les valeurs UTM depuis le local storage (si elles existent)
      */
     function getUTMFromStorage() {
         try {
@@ -59,16 +38,43 @@ document.addEventListener("DOMContentLoaded", function () {
                     "ads-gclid": parsedData.data["gclid"] || "",
                     "ads-utm-source": parsedData.data["utm_source"] || "",
                     "ads-utm-campaign": parsedData.data["utm_campaign"] || "",
-                    "ads-utm-term": parsedData.data["utm_term"] || "",
-                    "document-referrer": parsedData.data["document-referrer"] || getReferrerSource()
+                    "ads-utm-term": parsedData.data["utm_term"] || ""
                 };
             }
         } catch (e) {}
-        return { "document-referrer": getReferrerSource() };
+        return {};
     }
 
     /**
-     * Remplit les champs cachés des formulaires avec les données collectées
+     * Fonction pour récupérer le référent du document et vérifier s'il existe en local storage
+     * - Si présent en local storage, on l’utilise.
+     * - Sinon, on le calcule depuis `document.referrer` et on le formate (`domaine.extension`).
+     */
+    function getReferrer() {
+        try {
+            const storedReferrer = localStorage.getItem("referrer_tracking");
+            if (storedReferrer) {
+                return storedReferrer; // Priorité à la valeur existante
+            }
+        } catch (e) {}
+
+        let referrer = document.referrer;
+        if (!referrer) return ""; // Aucun référent détecté
+
+        try {
+            let hostname = new URL(referrer).hostname; // Extrait le domaine complet
+            let parts = hostname.split("."); // Sépare les parties du domaine
+            if (parts.length > 2) {
+                return parts[parts.length - 2] + "." + parts[parts.length - 1]; // Ex: google.com, facebook.com
+            }
+            return hostname;
+        } catch (e) {
+            return "";
+        }
+    }
+
+    /**
+     * Fonction pour injecter les données dans les champs cachés des formulaires
      */
     function fillHiddenFields(formId, data) {
         const form = document.getElementById(formId);
@@ -80,28 +86,25 @@ document.addEventListener("DOMContentLoaded", function () {
                 field.value = data[key];
             }
         });
-
-        // Ajoute la valeur du referer dans les champs dédiés
-        const referrerField = form.querySelector(`input[name="brief-${formId.split('-').pop()}-document-referrer"]`);
-        if (referrerField) {
-            referrerField.value = data["document-referrer"];
-        }
     }
 
     /**
-     * Applique les données aux formulaires en combinant toutes les sources
+     * Applique toutes les données aux formulaires
      */
     function applyDataToForms() {
         const browserInfo = getBrowserInfo();
         const utmFromURL = getUTMFromURL();
         const utmFromStorage = getUTMFromStorage();
+        const referrer = getReferrer();
 
-        const combinedData = { ...browserInfo, ...utmFromURL, ...utmFromStorage };
+        // Fusionne toutes les données
+        const combinedData = { ...browserInfo, ...utmFromURL, ...utmFromStorage, "document-referrer": referrer };
 
+        // Injecte les valeurs dans les champs cachés des formulaires
         fillHiddenFields("wf-form-brief-pro", combinedData);
         fillHiddenFields("wf-form-brief-private", combinedData);
     }
 
-    // Exécution du script
+    // Exécute l'ajout des données
     applyDataToForms();
 });
