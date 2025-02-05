@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
     /**
-     * Fonction pour récupérer les informations du navigateur (langue, appareil, résolution)
+     * Récupère les infos du navigateur (langue, appareil, résolution)
      */
     function getBrowserInfo() {
         return {
@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     /**
-     * Fonction pour récupérer les paramètres UTM depuis l'URL
+     * Récupère les UTM depuis l'URL
      */
     function getUTMFromURL() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     /**
-     * Fonction pour récupérer les valeurs UTM depuis le local storage (si elles existent)
+     * Récupère les UTM depuis le localStorage
      */
     function getUTMFromStorage() {
         try {
@@ -46,15 +46,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     /**
-     * Fonction pour récupérer le référent du document et vérifier s'il existe en local storage
-     * - Si présent en local storage, on l’utilise.
-     * - Sinon, on le calcule depuis `document.referrer` et on le formate (`domaine.extension`).
+     * Récupère le référent depuis le localStorage ou document.referrer
      */
     function getReferrer() {
         try {
-            const storedReferrer = localStorage.getItem("referrer_tracking");
+            const storedReferrer = localStorage.getItem("utm_tracking");
             if (storedReferrer) {
-                return storedReferrer; // Priorité à la valeur existante
+                let parsedData = JSON.parse(storedReferrer);
+                if (parsedData.data && parsedData.data["document-referrer"]) {
+                    return parsedData.data["document-referrer"]; // Utilise la valeur existante
+                }
             }
         } catch (e) {}
 
@@ -62,10 +63,10 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!referrer) return ""; // Aucun référent détecté
 
         try {
-            let hostname = new URL(referrer).hostname; // Extrait le domaine complet
-            let parts = hostname.split("."); // Sépare les parties du domaine
+            let hostname = new URL(referrer).hostname;
+            let parts = hostname.split(".");
             if (parts.length > 2) {
-                return parts[parts.length - 2] + "." + parts[parts.length - 1]; // Ex: google.com, facebook.com
+                return parts[parts.length - 2] + "." + parts[parts.length - 1]; // Format simplifié
             }
             return hostname;
         } catch (e) {
@@ -74,7 +75,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     /**
-     * Fonction pour injecter les données dans les champs cachés des formulaires
+     * Injecte les valeurs dans les champs cachés
      */
     function fillHiddenFields(formId, data) {
         const form = document.getElementById(formId);
@@ -89,7 +90,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     /**
-     * Applique toutes les données aux formulaires
+     * Applique les valeurs aux formulaires
      */
     function applyDataToForms() {
         const browserInfo = getBrowserInfo();
@@ -97,14 +98,11 @@ document.addEventListener("DOMContentLoaded", function () {
         const utmFromStorage = getUTMFromStorage();
         const referrer = getReferrer();
 
-        // Fusionne toutes les données
         const combinedData = { ...browserInfo, ...utmFromURL, ...utmFromStorage, "document-referrer": referrer };
 
-        // Injecte les valeurs dans les champs cachés des formulaires
         fillHiddenFields("wf-form-brief-pro", combinedData);
         fillHiddenFields("wf-form-brief-private", combinedData);
     }
 
-    // Exécute l'ajout des données
     applyDataToForms();
 });
