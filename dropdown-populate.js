@@ -37,6 +37,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Mettre à jour l'affichage du Dropdown
                 dropdownToggleText.textContent = selectedText;
 
+                // Retirer l'état d'erreur
+                dropdownToggle.classList.remove('is-error');
+
                 // Fermer le Dropdown
                 closeDropdown();
             }
@@ -46,6 +49,9 @@ document.addEventListener('DOMContentLoaded', function () {
         selectElement.addEventListener('change', function () {
             const selectedText = selectElement.options[selectElement.selectedIndex].textContent;
             dropdownToggleText.textContent = selectedText;
+
+            // Retirer l'état d'erreur
+            dropdownToggle.classList.remove('is-error');
         });
 
         // 4. Fermeture si clic à l'extérieur
@@ -63,6 +69,17 @@ document.addEventListener('DOMContentLoaded', function () {
             dropdownList.style.opacity = '0';
             dropdownList.style.transform = 'translate3d(0px, -2rem, 0px)';
         }
+
+        // 5. Synchroniser l'état d'erreur
+        selectElement.addEventListener('invalid', function () {
+            dropdownToggle.classList.add('is-error');
+        });
+
+        selectElement.addEventListener('input', function () {
+            if (selectElement.checkValidity()) {
+                dropdownToggle.classList.remove('is-error');
+            }
+        });
     }
 
     // Synchroniser tous les Dropdowns et Selects
