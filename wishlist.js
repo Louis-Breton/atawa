@@ -156,13 +156,13 @@ document.addEventListener("DOMContentLoaded", function () {
             cardContent.classList.add("wishlist_card-content");
 
             const category = document.createElement("p");
-            category.classList.add("fs-9", "text-neutral_400", "text-style-ellipsis");
+            category.classList.add("fs-9", "text-neutral_400");
             category.setAttribute("wl-card", "category");
             category.textContent = product.category;
 
             const link = document.createElement("a");
             link.href = product.link;
-            link.classList.add("text-secondary_950-base", "text-style-ellipsis");
+            link.classList.add("text-style-underline");
             link.setAttribute("wl-card", "name-link");
             link.textContent = product.name;
 
