@@ -1,13 +1,9 @@
 (function () {
   const FADE_IN_DURATION = 300; // Durée de l'animation fade-in en ms
   const FADE_OUT_DURATION = 300; // Durée de l'animation fade-out en ms
-  const CORNER_BANNER_DELAY = 5000; // 5 sec
-  // On ne garde plus l'ancien délai d'inactivité
+  const CORNER_BANNER_DELAY = 5000; // 5 sec pour la bannière (desktop)
+  const DEFAULT_POPUP_DELAY = 6000; // Délai d'affichage de la pop-up en ms (6 sec)
   const COOKIE_DURATION_HOURS = 48; // Durée du cookie en heures
-
-  // Nouveaux délais selon le type d'appareil
-  const MOBILE_POPUP_DELAY = 5000; // 5 sec pour mobile
-  const DESKTOP_POPUP_INACTIVITY_DELAY = 6000; // 6 sec d'inactivité pour desktop
 
   const modals = document.querySelectorAll('[modal="list"]');
   const cornerBanner = document.querySelector('[modal="corner-banner"]');
@@ -17,7 +13,6 @@
   const cornerCloseTriggers = document.querySelectorAll('[modal-close="corner-banner"]');
   const popupCloseTriggers = document.querySelectorAll('[modal-close="popup"]');
 
-  let inactivityTimer;
   let popupShown = false;
 
   // Arrête le script si aucun modal="list" n'est présent
@@ -82,57 +77,43 @@
     fadeOut(element, () => setCookie(modalName));
   };
 
+  // Détection de sortie de la souris (exit intent) pour desktop
   const onMouseLeave = (event) => {
-    if (event.clientY <= 0 && !popupShown && cornerBanner?.style.display !== 'block') {
+    if (event.clientY <= 0 && !popupShown) {
       popupShown = true;
       fadeIn(popupModal, 'flex');
     }
   };
 
-  // Pour desktop, on réinitialise le timer d'inactivité avec le nouveau délai de 10 sec
-  const resetInactivityTimer = () => {
-    clearTimeout(inactivityTimer);
-    if (!popupShown && cornerBanner?.style.display !== 'block') {
-      inactivityTimer = setTimeout(() => {
+  if (popupModal && popupElements.length > 0 && !isCookieSet('popup')) {
+    checkCookieExpiry('popup');
+    // Affichage par défaut de la pop-up après 6 secondes (pour mobile et desktop)
+    setTimeout(() => {
+      if (!popupShown) {
         popupShown = true;
         fadeIn(popupModal, 'flex');
-      }, DESKTOP_POPUP_INACTIVITY_DELAY);
+      }
+    }, DEFAULT_POPUP_DELAY);
+
+    // Pour desktop, on conserve la détection exit intent
+    if (window.innerWidth >= 768) {
+      document.addEventListener('mouseleave', onMouseLeave);
     }
-  };
+  }
 
   if (cornerBanner && cornerElements.length > 0 && !isCookieSet('corner-banner') && window.innerWidth >= 768) {
     checkCookieExpiry('corner-banner');
-    // Affiche la bannière corner après 5 secondes sur desktop
     setTimeout(() => {
+      // On affiche la bannière corner si la pop-up n'est pas affichée
       if (!popupShown) fadeIn(cornerBanner, 'block');
     }, CORNER_BANNER_DELAY);
   }
 
-  if (popupModal && popupElements.length > 0 && !isCookieSet('popup')) {
-    checkCookieExpiry('popup');
-    const isDesktop = window.innerWidth >= 768;
-    if (isDesktop) {
-      // Pour desktop : on détecte l'inactivité et la sortie de souris
-      document.addEventListener('mousemove', resetInactivityTimer);
-      document.addEventListener('keydown', resetInactivityTimer);
-      document.addEventListener('mouseleave', onMouseLeave);
-    } else {
-      // Pour mobile : affichage automatique 5 sec après chargement
-      setTimeout(() => {
-        if (!popupShown) {
-          popupShown = true;
-          fadeIn(popupModal, 'flex');
-        }
-      }, MOBILE_POPUP_DELAY);
-    }
-  }
-
-  // Gère le clic sur les éléments de fermeture pour corner-banner
+  // Gestion du clic sur les éléments de fermeture
   cornerCloseTriggers.forEach((trigger) => {
     trigger.addEventListener('click', () => hideModal('corner-banner', cornerBanner));
   });
 
-  // Gère le clic sur les éléments de fermeture pour popup
   popupCloseTriggers.forEach((trigger) => {
     trigger.addEventListener('click', () => hideModal('popup', popupModal));
   });
