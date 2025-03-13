@@ -2,8 +2,12 @@
   const FADE_IN_DURATION = 300; // Durée de l'animation fade-in en ms
   const FADE_OUT_DURATION = 300; // Durée de l'animation fade-out en ms
   const CORNER_BANNER_DELAY = 5000; // 5 sec
-  const POPUP_INACTIVITY_DELAY = 60000; // 1 min
+  // On ne garde plus l'ancien délai d'inactivité
   const COOKIE_DURATION_HOURS = 48; // Durée du cookie en heures
+
+  // Nouveaux délais selon le type d'appareil
+  const MOBILE_POPUP_DELAY = 5000; // 5 sec pour mobile
+  const DESKTOP_POPUP_INACTIVITY_DELAY = 6000; // 6 sec d'inactivité pour desktop
 
   const modals = document.querySelectorAll('[modal="list"]');
   const cornerBanner = document.querySelector('[modal="corner-banner"]');
@@ -85,19 +89,20 @@
     }
   };
 
+  // Pour desktop, on réinitialise le timer d'inactivité avec le nouveau délai de 10 sec
   const resetInactivityTimer = () => {
     clearTimeout(inactivityTimer);
     if (!popupShown && cornerBanner?.style.display !== 'block') {
       inactivityTimer = setTimeout(() => {
         popupShown = true;
         fadeIn(popupModal, 'flex');
-      }, POPUP_INACTIVITY_DELAY);
+      }, DESKTOP_POPUP_INACTIVITY_DELAY);
     }
   };
 
   if (cornerBanner && cornerElements.length > 0 && !isCookieSet('corner-banner') && window.innerWidth >= 768) {
     checkCookieExpiry('corner-banner');
-    // Affiche la bannière corner après 5 secondes si l'écran est >= 768px
+    // Affiche la bannière corner après 5 secondes sur desktop
     setTimeout(() => {
       if (!popupShown) fadeIn(cornerBanner, 'block');
     }, CORNER_BANNER_DELAY);
@@ -105,13 +110,21 @@
 
   if (popupModal && popupElements.length > 0 && !isCookieSet('popup')) {
     checkCookieExpiry('popup');
-
-    // Gère l'inactivité de l'utilisateur
-    document.addEventListener('mousemove', resetInactivityTimer);
-    document.addEventListener('keydown', resetInactivityTimer);
-
-    // Détecte le mouvement du curseur vers le haut de l'écran
-    document.addEventListener('mouseleave', onMouseLeave);
+    const isDesktop = window.innerWidth >= 768;
+    if (isDesktop) {
+      // Pour desktop : on détecte l'inactivité et la sortie de souris
+      document.addEventListener('mousemove', resetInactivityTimer);
+      document.addEventListener('keydown', resetInactivityTimer);
+      document.addEventListener('mouseleave', onMouseLeave);
+    } else {
+      // Pour mobile : affichage automatique 5 sec après chargement
+      setTimeout(() => {
+        if (!popupShown) {
+          popupShown = true;
+          fadeIn(popupModal, 'flex');
+        }
+      }, MOBILE_POPUP_DELAY);
+    }
   }
 
   // Gère le clic sur les éléments de fermeture pour corner-banner
