@@ -30,7 +30,69 @@ document.addEventListener('DOMContentLoaded', function () {
   populateMonthSelect('brief-pro-date-periode');
   populateMonthSelect('brief-private-date-periode');
 
-  // 2. Vérification lors du clic sur le trigger (btn="check-error")
+  // 2. Synchronisation entre select caché et dropdown custom
+  function synchronizeSelectAndDropdown(origine, destination) {
+    const selectElement = document.querySelector(`select[selectpopulate="${origine}"]`);
+    const dropdownWrapper = document.querySelector(`.dropdown_wrapper[selectpopulate="${destination}"]`);
+    const dropdownList = dropdownWrapper.querySelector('.dropdown_list');
+    const dropdownToggle = dropdownWrapper.querySelector('.w-dropdown-toggle');
+    const dropdownToggleText = dropdownToggle.querySelector('div:first-child');
+
+    selectElement.querySelectorAll('option').forEach(option => {
+      const optionValue = option.value;
+      const optionText = option.textContent;
+      if (optionValue) {
+        const dropdownLink = document.createElement('a');
+        dropdownLink.href = '#';
+        dropdownLink.classList.add('dropdown_link', 'w-dropdown-link');
+        dropdownLink.setAttribute('data-value', optionValue);
+        dropdownLink.setAttribute('role', 'menuitem');
+        dropdownLink.textContent = optionText;
+        dropdownList.appendChild(dropdownLink);
+      }
+    });
+
+    dropdownList.addEventListener('click', function (e) {
+      if (e.target.matches('.dropdown_link')) {
+        e.preventDefault();
+        const selectedValue = e.target.getAttribute('data-value');
+        const selectedText = e.target.textContent;
+        selectElement.value = selectedValue;
+        selectElement.dispatchEvent(new Event('change'));
+        dropdownToggleText.textContent = selectedText;
+        dropdownToggle.classList.remove('is-error');
+        closeDropdown();
+      }
+    });
+
+    selectElement.addEventListener('change', function () {
+      const selectedText = selectElement.options[selectElement.selectedIndex].textContent;
+      dropdownToggleText.textContent = selectedText;
+      dropdownToggle.classList.remove('is-error');
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!dropdownWrapper.contains(e.target) && dropdownToggle.getAttribute('aria-expanded') === 'true') {
+        closeDropdown();
+      }
+    });
+
+    function closeDropdown() {
+      dropdownToggle.classList.remove('w--open');
+      dropdownToggle.setAttribute('aria-expanded', 'false');
+      dropdownList.classList.remove('w--open');
+      dropdownList.style.opacity = '0';
+      dropdownList.style.transform = 'translate3d(0px, -2rem, 0px)';
+    }
+  }
+
+  document.querySelectorAll('[selectpopulate^="origine"]').forEach(selectEl => {
+    const origineAttr = selectEl.getAttribute('selectpopulate');
+    const destinationAttr = origineAttr.replace('origine', 'destination');
+    synchronizeSelectAndDropdown(origineAttr, destinationAttr);
+  });
+
+  // 3. Vérification lors du clic sur le trigger (btn="check-error")
   document.querySelectorAll('[btn="check-error"]').forEach(triggerButton => {
     triggerButton.addEventListener('click', function () {
       const form = triggerButton.closest('form');
