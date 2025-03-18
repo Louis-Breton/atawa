@@ -1,4 +1,59 @@
+
 document.addEventListener('DOMContentLoaded', function () {
+  // Fonction pour valider les groupes de boutons radio d'un formulaire, pour un préfixe donné
+  function validateRadioGroupsForForm(form, prefix) {
+    const radioGroups = {};
+    form.querySelectorAll(`input[type="radio"][required][name^="${prefix}"]`).forEach(radio => {
+      const name = radio.name;
+      if (!radioGroups[name]) {
+        radioGroups[name] = [];
+      }
+      radioGroups[name].push(radio);
+    });
+    Object.keys(radioGroups).forEach(name => {
+      const group = radioGroups[name];
+      const checked = group.some(radio => radio.checked);
+      const groupContainer = group[0].closest('.form_check-group');
+      group.forEach(radio => {
+        const label = radio.closest('label.w-radio');
+        if (!checked) {
+          if (label) {
+            label.classList.add('is-error');
+            const radioIcon = label.querySelector('.w-radio-input');
+            if (radioIcon) radioIcon.classList.add('is-error');
+          }
+          if (groupContainer) {
+            groupContainer.classList.add('is-error');
+          }
+        } else {
+          if (label) {
+            label.classList.remove('is-error');
+            const radioIcon = label.querySelector('.w-radio-input');
+            if (radioIcon) radioIcon.classList.remove('is-error');
+          }
+          if (groupContainer) {
+            groupContainer.classList.remove('is-error');
+          }
+        }
+      });
+    });
+  }
+
+  // Fonction pour valider les checkboxes d'un formulaire, pour un préfixe donné
+  function validateCheckboxesForForm(form, prefix) {
+    form.querySelectorAll(`input[type="checkbox"][required][name^="${prefix}"]`).forEach(checkbox => {
+      if (!checkbox.checked) {
+        checkbox.classList.add('is-error');
+        const wrapper = checkbox.closest('label.w-checkbox');
+        if (wrapper) {
+          wrapper.classList.add('is-error');
+          const checkIcon = wrapper.querySelector('.w-checkbox-input');
+          if (checkIcon) checkIcon.classList.add('is-error');
+        }
+      }
+    });
+  }
+
   // 1. Population dynamique des selects de période
   function populateMonthSelect(selectName) {
     const selectElement = document.querySelector('select[name="' + selectName + '"]');
@@ -7,17 +62,14 @@ document.addEventListener('DOMContentLoaded', function () {
       selectElement.querySelectorAll('option').forEach(option => {
         existingValues.add(option.value);
       });
-
       const lang = navigator.language || navigator.userLanguage || 'en';
       const monthNames = lang.toLowerCase().startsWith('fr')
         ? ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
         : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
       const today = new Date();
       for (let i = 0; i < 16; i++) {
         const date = new Date(today.getFullYear(), today.getMonth() + i, 1);
         const optionText = monthNames[date.getMonth()] + ' ' + date.getFullYear();
-
         if (!existingValues.has(optionText)) {
           const option = document.createElement('option');
           option.value = optionText;
@@ -84,29 +136,51 @@ document.addEventListener('DOMContentLoaded', function () {
       dropdownList.style.opacity = '0';
       dropdownList.style.transform = 'translate3d(0px, -2rem, 0px)';
     }
-  }
 
+    selectElement.addEventListener('invalid', function () {
+      dropdownToggle.classList.add('is-error');
+    });
+    selectElement.addEventListener('input', function () {
+      if (selectElement.checkValidity()) {
+        dropdownToggle.classList.remove('is-error');
+      }
+    });
+  }
   document.querySelectorAll('[selectpopulate^="origine"]').forEach(selectEl => {
     const origineAttr = selectEl.getAttribute('selectpopulate');
     const destinationAttr = origineAttr.replace('origine', 'destination');
     synchronizeSelectAndDropdown(origineAttr, destinationAttr);
   });
 
-  // 3. Vérification lors du clic sur le trigger (btn="check-error")
+  // 3. Validation au clic sur le trigger (btn="check-error")
   document.querySelectorAll('[btn="check-error"]').forEach(triggerButton => {
     triggerButton.addEventListener('click', function () {
       const form = triggerButton.closest('form');
       if (!form) return;
 
+      // Validation des champs classiques (texte, selects, textarea)
       form.querySelectorAll('input:not([type="radio"]), textarea, select').forEach(field => {
-        if (field.hasAttribute('required')) {
-          let valid = field.type === 'checkbox' ? field.checked : field.value.trim() !== '';
-          let wrapper = field.closest('.form_field-wrapper');
-
+        if (field.hasAttribute('required') && field.name && (field.name.startsWith('brief-pro') || field.name.startsWith('brief-private'))) {
+          let valid = field.value.trim() !== '';
+          if (field.type === 'checkbox') {
+            valid = field.checked;
+          }
+          let wrapper;
+          if (field.type === 'checkbox') {
+            wrapper = field.closest('label.w-checkbox');
+          } else if (field.name === 'brief-pro-date-periode' || field.name === 'brief-private-date-periode') {
+            wrapper = field.closest('[date-switch="period-date"]');
+          } else {
+            wrapper = field.closest('.form_field-wrapper');
+          }
           if (!valid) {
             field.classList.add('is-error');
             if (wrapper) {
               wrapper.classList.add('is-error');
+              if (field.type === 'checkbox') {
+                const checkIcon = wrapper.querySelector('.w-checkbox-input');
+                if (checkIcon) checkIcon.classList.add('is-error');
+              }
               const err = wrapper.querySelector(`.form_label-error[error-label="${field.name}"]`);
               if (err) err.style.display = 'block';
             }
@@ -114,6 +188,10 @@ document.addEventListener('DOMContentLoaded', function () {
             field.classList.remove('is-error');
             if (wrapper) {
               wrapper.classList.remove('is-error');
+              if (field.type === 'checkbox') {
+                const checkIcon = wrapper.querySelector('.w-checkbox-input');
+                if (checkIcon) checkIcon.classList.remove('is-error');
+              }
               const err = wrapper.querySelector(`.form_label-error[error-label="${field.name}"]`);
               if (err) err.style.display = 'none';
             }
@@ -121,39 +199,122 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       });
 
-      // Vérification des champs date
+      // Validation des champs date (même logique pour les deux formulaires)
       const fullDateContainer = form.querySelector('[date-switch="full-date"]');
       if (fullDateContainer) {
         const startDesktop = fullDateContainer.querySelector('input[name="brief-private-date-start-desktop"]');
         const endDesktop = fullDateContainer.querySelector('input[name="brief-private-date-end-desktop"]');
         const startMobile = fullDateContainer.querySelector('input[name="brief-private-date-start-mobile"]');
         const endMobile = fullDateContainer.querySelector('input[name="brief-private-date-end-mobile"]');
-
         const isMobileActive = startMobile && window.getComputedStyle(startMobile).display !== 'none';
         let isValid = isMobileActive
           ? startMobile.value.trim() !== '' && endMobile.value.trim() !== ''
           : startDesktop.value.trim() !== '' && endDesktop.value.trim() !== '';
-
         const dateInputContainer = fullDateContainer.querySelector('.form_input.is-datepicker');
-
         if (!isValid) {
           if (dateInputContainer) dateInputContainer.classList.add('is-error');
-
           const errStart = fullDateContainer.querySelector(`.form_label-error[error-label="brief-private-date-start-${isMobileActive ? 'mobile' : 'desktop'}"]`);
           const errEnd = fullDateContainer.querySelector(`.form_label-error[error-label="brief-private-date-end-${isMobileActive ? 'mobile' : 'desktop'}"]`);
-          
           if (errStart) errStart.style.display = 'block';
           if (errEnd) errEnd.style.display = 'block';
         } else {
           if (dateInputContainer) dateInputContainer.classList.remove('is-error');
-
           const errStart = fullDateContainer.querySelector(`.form_label-error[error-label="brief-private-date-start-${isMobileActive ? 'mobile' : 'desktop'}"]`);
           const errEnd = fullDateContainer.querySelector(`.form_label-error[error-label="brief-private-date-end-${isMobileActive ? 'mobile' : 'desktop'}"]`);
-          
           if (errStart) errStart.style.display = 'none';
           if (errEnd) errEnd.style.display = 'none';
         }
       }
+
+      // Appel des fonctions dédiées aux checkboxes et radios pour chaque préfixe
+      validateCheckboxesForForm(form, "brief-pro");
+      validateCheckboxesForForm(form, "brief-private");
+      validateRadioGroupsForForm(form, "brief-pro");
+      validateRadioGroupsForForm(form, "brief-private");
+    });
+  });
+
+  // 4. Retrait automatique des états d’erreur lors de la saisie (pour tous les formulaires)
+  document.querySelectorAll('form').forEach(form => {
+    form.querySelectorAll('input, textarea, select').forEach(field => {
+      ['input', 'change'].forEach(evt => {
+        field.addEventListener(evt, function () {
+          if (field.hasAttribute('required') && (field.type === 'checkbox' || field.type === 'radio' || (field.name && (field.name.startsWith('brief-pro') || field.name.startsWith('brief-private'))))) {
+            let valid;
+            if (field.type === 'checkbox' || field.type === 'radio') {
+              valid = field.checked;
+            } else {
+              valid = field.value.trim() !== '';
+            }
+            if (valid) {
+              field.classList.remove('is-error');
+              let wrapper;
+              if (field.type === 'checkbox') {
+                wrapper = field.closest('label.w-checkbox');
+                if (wrapper) {
+                  wrapper.classList.remove('is-error');
+                  const checkIcon = wrapper.querySelector('.w-checkbox-input');
+                  if (checkIcon) checkIcon.classList.remove('is-error');
+                }
+              } else if (field.type === 'radio') {
+                if (field.checked) {
+                  const radios = form.querySelectorAll(`input[type="radio"][name="${field.name}"]`);
+                  radios.forEach(radio => {
+                    const lab = radio.closest('label.w-radio');
+                    if (lab) {
+                      lab.classList.remove('is-error');
+                      const rIcon = lab.querySelector('.w-radio-input');
+                      if (rIcon) rIcon.classList.remove('is-error');
+                    }
+                  });
+                  const groupContainer = field.closest('.form_check-group');
+                  if (groupContainer) {
+                    groupContainer.classList.remove('is-error');
+                  }
+                }
+              } else if (field.name === 'brief-pro-date-periode' || field.name === 'brief-private-date-periode') {
+                wrapper = field.closest('[date-switch="period-date"]');
+                if (wrapper) {
+                  wrapper.classList.remove('is-error');
+                  const dropdownToggle = wrapper.querySelector('.w-dropdown-toggle');
+                  if (dropdownToggle) dropdownToggle.classList.remove('is-error');
+                  const err = wrapper.querySelector(`.form_label-error[error-label="${field.name}"]`);
+                  if (err) err.style.display = 'none';
+                }
+              } else {
+                wrapper = field.closest('.form_field-wrapper');
+                if (wrapper) {
+                  wrapper.classList.remove('is-error');
+                  const err = wrapper.querySelector(`.form_label-error[error-label="${field.name}"]`);
+                  if (err) err.style.display = 'none';
+                }
+              }
+            }
+          }
+        });
+      });
+    });
+  });
+
+  // 5. Pour le groupe full-date, retirer l'erreur dès que l'utilisateur clique sur la zone
+  document.querySelectorAll('[date-switch="full-date"]').forEach(fullDateContainer => {
+    fullDateContainer.addEventListener('click', function () {
+      const dateInputContainer = fullDateContainer.querySelector('.form_input.is-datepicker');
+      if (dateInputContainer) dateInputContainer.classList.remove('is-error');
+      const errorLabels = [
+        'brief-private-date-start-desktop',
+        'brief-private-date-end-desktop',
+        'brief-private-date-start-mobile',
+        'brief-private-date-end-mobile',
+        'brief-pro-date-start-desktop',
+        'brief-pro-date-end-desktop',
+        'brief-pro-date-start-mobile',
+        'brief-pro-date-end-mobile'
+      ];
+      errorLabels.forEach(label => {
+        const errElem = fullDateContainer.querySelector(`.form_label-error[error-label="${label}"]`);
+        if (errElem) errElem.style.display = 'none';
+      });
     });
   });
 });
