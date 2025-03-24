@@ -226,7 +226,6 @@ document.addEventListener('DOMContentLoaded', function () {
       validateRadioGroupsForForm(form, "brief-pro");
       validateRadioGroupsForForm(form, "brief-private");
 
-      // Tooltip error logic
       const tooltip = form.querySelector('[tooltip="error"]');
       if (tooltip) {
         let hasEmpty = false;
@@ -332,6 +331,26 @@ document.addEventListener('DOMContentLoaded', function () {
         const errElem = fullDateContainer.querySelector(`.form_label-error[error-label="${label}"]`);
         if (errElem) errElem.style.display = 'none';
       });
+    });
+  });
+
+  // Ajout pour observer dynamiquement les erreurs visibles
+  document.querySelectorAll('form').forEach(form => {
+    const tooltip = form.querySelector('[tooltip="error"]');
+    if (!tooltip) return;
+
+    const observer = new MutationObserver(() => {
+      const visibleErrors = Array.from(form.querySelectorAll('.is-error')).filter(el => {
+        return el.offsetParent !== null;
+      });
+
+      tooltip.style.display = visibleErrors.length > 0 ? 'block' : 'none';
+    });
+
+    observer.observe(form, {
+      attributes: true,
+      subtree: true,
+      attributeFilter: ['class']
     });
   });
 });
