@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', function () {
   // Fonction pour valider les groupes de boutons radio d'un formulaire, pour un préfixe donné
   function validateRadioGroupsForForm(form, prefix) {
@@ -54,7 +53,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // 1. Population dynamique des selects de période
   function populateMonthSelect(selectName) {
     const selectElement = document.querySelector('select[name="' + selectName + '"]');
     if (selectElement) {
@@ -82,7 +80,6 @@ document.addEventListener('DOMContentLoaded', function () {
   populateMonthSelect('brief-pro-date-periode');
   populateMonthSelect('brief-private-date-periode');
 
-  // 2. Synchronisation entre select caché et dropdown custom
   function synchronizeSelectAndDropdown(origine, destination) {
     const selectElement = document.querySelector(`select[selectpopulate="${origine}"]`);
     const dropdownWrapper = document.querySelector(`.dropdown_wrapper[selectpopulate="${destination}"]`);
@@ -152,13 +149,12 @@ document.addEventListener('DOMContentLoaded', function () {
     synchronizeSelectAndDropdown(origineAttr, destinationAttr);
   });
 
-  // 3. Validation au clic sur le trigger (btn="check-error")
+  // Validation principale au clic
   document.querySelectorAll('[btn="check-error"]').forEach(triggerButton => {
     triggerButton.addEventListener('click', function () {
       const form = triggerButton.closest('form');
       if (!form) return;
 
-      // Validation des champs classiques (texte, selects, textarea)
       form.querySelectorAll('input:not([type="radio"]), textarea, select').forEach(field => {
         if (field.hasAttribute('required') && field.name && (field.name.startsWith('brief-pro') || field.name.startsWith('brief-private'))) {
           let valid = field.value.trim() !== '';
@@ -199,13 +195,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       });
 
-      // Validation des champs date (même logique pour les deux formulaires)
       const fullDateContainer = form.querySelector('[date-switch="full-date"]');
       if (fullDateContainer) {
-        const startDesktop = fullDateContainer.querySelector('input[name="brief-private-date-start-desktop"]');
-        const endDesktop = fullDateContainer.querySelector('input[name="brief-private-date-end-desktop"]');
-        const startMobile = fullDateContainer.querySelector('input[name="brief-private-date-start-mobile"]');
-        const endMobile = fullDateContainer.querySelector('input[name="brief-private-date-end-mobile"]');
+        const startDesktop = fullDateContainer.querySelector('input[name$="date-start-desktop"]');
+        const endDesktop = fullDateContainer.querySelector('input[name$="date-end-desktop"]');
+        const startMobile = fullDateContainer.querySelector('input[name$="date-start-mobile"]');
+        const endMobile = fullDateContainer.querySelector('input[name$="date-end-mobile"]');
         const isMobileActive = startMobile && window.getComputedStyle(startMobile).display !== 'none';
         let isValid = isMobileActive
           ? startMobile.value.trim() !== '' && endMobile.value.trim() !== ''
@@ -213,39 +208,64 @@ document.addEventListener('DOMContentLoaded', function () {
         const dateInputContainer = fullDateContainer.querySelector('.form_input.is-datepicker');
         if (!isValid) {
           if (dateInputContainer) dateInputContainer.classList.add('is-error');
-          const errStart = fullDateContainer.querySelector(`.form_label-error[error-label="brief-private-date-start-${isMobileActive ? 'mobile' : 'desktop'}"]`);
-          const errEnd = fullDateContainer.querySelector(`.form_label-error[error-label="brief-private-date-end-${isMobileActive ? 'mobile' : 'desktop'}"]`);
+          const errStart = fullDateContainer.querySelector(`.form_label-error[error-label$="date-start-${isMobileActive ? 'mobile' : 'desktop'}"]`);
+          const errEnd = fullDateContainer.querySelector(`.form_label-error[error-label$="date-end-${isMobileActive ? 'mobile' : 'desktop'}"]`);
           if (errStart) errStart.style.display = 'block';
           if (errEnd) errEnd.style.display = 'block';
         } else {
           if (dateInputContainer) dateInputContainer.classList.remove('is-error');
-          const errStart = fullDateContainer.querySelector(`.form_label-error[error-label="brief-private-date-start-${isMobileActive ? 'mobile' : 'desktop'}"]`);
-          const errEnd = fullDateContainer.querySelector(`.form_label-error[error-label="brief-private-date-end-${isMobileActive ? 'mobile' : 'desktop'}"]`);
+          const errStart = fullDateContainer.querySelector(`.form_label-error[error-label$="date-start-${isMobileActive ? 'mobile' : 'desktop'}"]`);
+          const errEnd = fullDateContainer.querySelector(`.form_label-error[error-label$="date-end-${isMobileActive ? 'mobile' : 'desktop'}"]`);
           if (errStart) errStart.style.display = 'none';
           if (errEnd) errEnd.style.display = 'none';
         }
       }
 
-      // Appel des fonctions dédiées aux checkboxes et radios pour chaque préfixe
       validateCheckboxesForForm(form, "brief-pro");
       validateCheckboxesForForm(form, "brief-private");
       validateRadioGroupsForForm(form, "brief-pro");
       validateRadioGroupsForForm(form, "brief-private");
+
+      // Tooltip error logic
+      const tooltip = form.querySelector('[tooltip="error"]');
+      if (tooltip) {
+        let hasEmpty = false;
+        form.querySelectorAll('input, textarea, select').forEach(field => {
+          const isRequired = field.hasAttribute('required');
+          const isVisible = window.getComputedStyle(field).display !== 'none';
+          const isRelevant = field.name && (field.name.startsWith('brief-pro') || field.name.startsWith('brief-private'));
+
+          if (isRequired && isVisible && isRelevant) {
+            if ((field.type === 'checkbox' || field.type === 'radio') && !field.checked) {
+              hasEmpty = true;
+            } else if (field.type !== 'checkbox' && field.type !== 'radio' && field.value.trim() === '') {
+              hasEmpty = true;
+            }
+          }
+        });
+
+        const startMobile = form.querySelector('input[name$="date-start-mobile"]');
+        const endMobile = form.querySelector('input[name$="date-end-mobile"]');
+        const startDesktop = form.querySelector('input[name$="date-start-desktop"]');
+        const endDesktop = form.querySelector('input[name$="date-end-desktop"]');
+        const isMobileActive = startMobile && window.getComputedStyle(startMobile).display !== 'none';
+        const isDateValid = isMobileActive
+          ? startMobile?.value.trim() !== '' && endMobile?.value.trim() !== ''
+          : startDesktop?.value.trim() !== '' && endDesktop?.value.trim() !== '';
+        if (!isDateValid) hasEmpty = true;
+
+        tooltip.style.display = hasEmpty ? 'block' : 'none';
+      }
     });
   });
 
-  // 4. Retrait automatique des états d’erreur lors de la saisie (pour tous les formulaires)
+  // Retrait auto des erreurs
   document.querySelectorAll('form').forEach(form => {
     form.querySelectorAll('input, textarea, select').forEach(field => {
       ['input', 'change'].forEach(evt => {
         field.addEventListener(evt, function () {
           if (field.hasAttribute('required') && (field.type === 'checkbox' || field.type === 'radio' || (field.name && (field.name.startsWith('brief-pro') || field.name.startsWith('brief-private'))))) {
-            let valid;
-            if (field.type === 'checkbox' || field.type === 'radio') {
-              valid = field.checked;
-            } else {
-              valid = field.value.trim() !== '';
-            }
+            let valid = (field.type === 'checkbox' || field.type === 'radio') ? field.checked : field.value.trim() !== '';
             if (valid) {
               field.classList.remove('is-error');
               let wrapper;
@@ -257,20 +277,18 @@ document.addEventListener('DOMContentLoaded', function () {
                   if (checkIcon) checkIcon.classList.remove('is-error');
                 }
               } else if (field.type === 'radio') {
-                if (field.checked) {
-                  const radios = form.querySelectorAll(`input[type="radio"][name="${field.name}"]`);
-                  radios.forEach(radio => {
-                    const lab = radio.closest('label.w-radio');
-                    if (lab) {
-                      lab.classList.remove('is-error');
-                      const rIcon = lab.querySelector('.w-radio-input');
-                      if (rIcon) rIcon.classList.remove('is-error');
-                    }
-                  });
-                  const groupContainer = field.closest('.form_check-group');
-                  if (groupContainer) {
-                    groupContainer.classList.remove('is-error');
+                const radios = form.querySelectorAll(`input[type="radio"][name="${field.name}"]`);
+                radios.forEach(radio => {
+                  const lab = radio.closest('label.w-radio');
+                  if (lab) {
+                    lab.classList.remove('is-error');
+                    const rIcon = lab.querySelector('.w-radio-input');
+                    if (rIcon) rIcon.classList.remove('is-error');
                   }
+                });
+                const groupContainer = field.closest('.form_check-group');
+                if (groupContainer) {
+                  groupContainer.classList.remove('is-error');
                 }
               } else if (field.name === 'brief-pro-date-periode' || field.name === 'brief-private-date-periode') {
                 wrapper = field.closest('[date-switch="period-date"]');
@@ -296,7 +314,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // 5. Pour le groupe full-date, retirer l'erreur dès que l'utilisateur clique sur la zone
   document.querySelectorAll('[date-switch="full-date"]').forEach(fullDateContainer => {
     fullDateContainer.addEventListener('click', function () {
       const dateInputContainer = fullDateContainer.querySelector('.form_input.is-datepicker');
