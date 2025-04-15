@@ -1,83 +1,79 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // SCRIPT 1 : Gestion des filtres
+  console.log('[INIT] DOMContentLoaded');
 
-    // Sélectionner le bouton "Toutes"
-    const clearButton = document.querySelector('[fs-cmsfilter-element="clear"]');
+  const tags = document.querySelectorAll('.dynamic-radio-tag [tooltip-active]');
+  const tooltips = document.querySelectorAll('.tooltip-banner');
+  const tooltipWrapper = document.querySelector('[tooltip-data="ccoeur"]'); // conteneur global
+  const resetButton = document.querySelector('.filter-reset-button');
+  let activeTooltip = null;
+  let activeTooltipKey = null;
 
-    // Sélectionner tous les autres filtres
-    const filterButtons = document.querySelectorAll('[fs-cmsfilter-active="is-active"]');
+  // Fonction centrale pour forcer l'affichage
+  function showTooltipManually(key) {
+    const tooltip = Array.from(tooltips).find(t => t.getAttribute('tooltip-data') === key);
+    if (!tooltip) return;
 
-    if (clearButton && filterButtons) {
-        // Ajouter un événement de clic au bouton "Toutes"
-        clearButton.addEventListener('click', () => {
-            // Ajouter la classe is-active au bouton "Toutes"
-            clearButton.classList.add('is-active');
-
-            // Retirer la classe is-active des autres filtres
-            filterButtons.forEach(button => {
-                if (button !== clearButton) {
-                    button.classList.remove('is-active');
-                }
-            });
-        });
-
-        // Ajouter un événement de clic à chaque filtre
-        filterButtons.forEach(button => {
-            if (button !== clearButton) {
-                button.addEventListener('click', () => {
-                    // Retirer la classe is-active du bouton "Toutes"
-                    clearButton.classList.remove('is-active');
-
-                    // Ajouter la classe is-active au bouton cliqué
-                    button.classList.add('is-active');
-                });
-            }
-        });
+    if (tooltipWrapper && tooltipWrapper.style.display === 'none') {
+      console.log('[TOOLTIPS] Tooltip wrapper is hidden — forcing display');
+      tooltipWrapper.style.display = 'block';
     }
 
-    // SCRIPT 2 : Gestion des tooltips
+    tooltip.style.display = 'flex';
+    activeTooltip = tooltip;
+    activeTooltipKey = key;
 
-    // Sélectionne tous les éléments ayant la classe .dynamic-radio-tag avec l'attribut [tooltip-active]
-    const tags = document.querySelectorAll(".dynamic-radio-tag [tooltip-active]");
-    // Sélectionne tous les tooltips avec la classe .tooltip-banner
-    const tooltips = document.querySelectorAll(".tooltip-banner");
-    // Sélectionne le bouton de réinitialisation
-    const resetButton = document.querySelector(".filter-reset-button");
-    let activeTooltip = null;
+    console.log('[TOOLTIPS] Tooltip manually shown:', key);
+  }
 
-    // Fonction pour cacher tous les tooltips
-    function hideAllTooltips() {
-        tooltips.forEach(tooltip => {
-            tooltip.style.display = "none";
-        });
-        activeTooltip = null;
-    }
-
-    // Ajoute un événement de clic à chaque tag
-    tags.forEach(tag => {
-        tag.addEventListener("click", () => {
-            const tooltipActiveValue = tag.getAttribute("tooltip-active");
-
-            // Trouve le tooltip correspondant à l'attribut tooltip-active
-            const tooltip = Array.from(tooltips).find(
-                t => t.getAttribute("tooltip-data") === tooltipActiveValue
-            );
-
-            // Cache le tooltip actif actuel s'il est différent de celui sur lequel on a cliqué
-            if (activeTooltip && activeTooltip !== tooltip) {
-                activeTooltip.style.display = "none";
-            }
-
-            // Affiche le nouveau tooltip si ce n'est pas déjà le tooltip actif
-            if (tooltip && tooltip !== activeTooltip) {
-                tooltip.style.display = "flex";
-                activeTooltip = tooltip;
-            }
-        });
+  // Fonction pour cacher tous les tooltips
+  function hideAllTooltips() {
+    console.log('[TOOLTIPS] Hiding all tooltips');
+    tooltips.forEach(tooltip => {
+      tooltip.style.display = 'none';
     });
+    activeTooltip = null;
+    activeTooltipKey = null;
+  }
 
-    // Ajoute un événement de clic au bouton de réinitialisation
-    if (resetButton) {
-        resetButton.addEventListener("click", hideAllTooltips);
-    }
+  // MutationObserver pour intercepter les changements DOM causés par Finsweet
+  const observer = new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
+      if (
+        activeTooltipKey &&
+        tooltipWrapper &&
+        tooltipWrapper.style.display === 'none'
+      ) {
+        console.log('[TOOLTIPS] CMS Filter modified wrapper — restoring tooltip');
+        showTooltipManually(activeTooltipKey);
+      }
+    });
+  });
+
+  // Démarrage de l'observation du parent
+  if (tooltipWrapper) {
+    observer.observe(tooltipWrapper, { attributes: true, attributeFilter: ['style'] });
+  }
+
+  // Écoute des tags
+  tags.forEach(tag => {
+    tag.addEventListener('click', () => {
+      const tooltipKey = tag.getAttribute('tooltip-active');
+      console.log('[TOOLTIPS] Tag clicked:', tooltipKey);
+
+      if (activeTooltip && activeTooltip.getAttribute('tooltip-data') !== tooltipKey) {
+        console.log('[TOOLTIPS] Hiding previous tooltip');
+        activeTooltip.style.display = 'none';
+      }
+
+      showTooltipManually(tooltipKey);
+    });
+  });
+
+  // Écoute du reset
+  if (resetButton) {
+    resetButton.addEventListener('click', () => {
+      console.log('[TOOLTIPS] Reset button clicked');
+      hideAllTooltips();
+    });
+  }
 });
