@@ -1,9 +1,9 @@
 (function () {
-  const FADE_IN_DURATION = 300; // Durée de l'animation fade-in en ms
-  const FADE_OUT_DURATION = 300; // Durée de l'animation fade-out en ms
-  const CORNER_BANNER_DELAY = 5000; // 5 sec pour la bannière (desktop)
-  const DEFAULT_POPUP_DELAY = 6000; // Délai d'affichage de la pop-up en ms (6 sec)
-  const COOKIE_DURATION_HOURS = 48; // Durée du cookie en heures
+  const FADE_IN_DURATION = 300;
+  const FADE_OUT_DURATION = 300;
+  const CORNER_BANNER_DELAY = 7000;
+  const DEFAULT_POPUP_DELAY = 7000;
+  const COOKIE_DURATION_HOURS = 6;
 
   const modals = document.querySelectorAll('[modal="list"]');
   const cornerBanner = document.querySelector('[modal="corner-banner"]');
@@ -15,10 +15,8 @@
 
   let popupShown = false;
 
-  // Arrête le script si aucun modal="list" n'est présent
   if (!modals || modals.length === 0) return;
 
-  // Vérifie si un cookie empêche l'affichage d'une modale spécifique
   const isCookieSet = (modal) => {
     return localStorage.getItem(`modals_hidden_${modal}`) === 'true';
   };
@@ -77,7 +75,6 @@
     fadeOut(element, () => setCookie(modalName));
   };
 
-  // Détection de sortie de la souris (exit intent) pour desktop
   const onMouseLeave = (event) => {
     if (event.clientY <= 0 && !popupShown) {
       popupShown = true;
@@ -87,15 +84,41 @@
 
   if (popupModal && popupElements.length > 0 && !isCookieSet('popup')) {
     checkCookieExpiry('popup');
-    // Affichage par défaut de la pop-up après 6 secondes (pour mobile et desktop)
+
+    const popupTrigger = document.getElementById("popup-trigger");
+    let timeElapsed = false;
+    let triggerSeen = false;
+
+    // Lance le timer dès le début
     setTimeout(() => {
-      if (!popupShown) {
+      timeElapsed = true;
+      if (triggerSeen && !popupShown) {
         popupShown = true;
         fadeIn(popupModal, 'flex');
       }
     }, DEFAULT_POPUP_DELAY);
 
-    // Pour desktop, on conserve la détection exit intent
+    // Si le trigger est présent, observe son intersection dès le début
+    if (popupTrigger) {
+      const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && !popupShown) {
+            triggerSeen = true;
+            if (timeElapsed) {
+              popupShown = true;
+              fadeIn(popupModal, 'flex');
+              obs.unobserve(entry.target);
+            }
+          }
+        });
+      }, {
+        root: null,
+        threshold: 0.1
+      });
+
+      observer.observe(popupTrigger);
+    }
+
     if (window.innerWidth >= 768) {
       document.addEventListener('mouseleave', onMouseLeave);
     }
@@ -104,12 +127,10 @@
   if (cornerBanner && cornerElements.length > 0 && !isCookieSet('corner-banner') && window.innerWidth >= 768) {
     checkCookieExpiry('corner-banner');
     setTimeout(() => {
-      // On affiche la bannière corner si la pop-up n'est pas affichée
       if (!popupShown) fadeIn(cornerBanner, 'block');
     }, CORNER_BANNER_DELAY);
   }
 
-  // Gestion du clic sur les éléments de fermeture
   cornerCloseTriggers.forEach((trigger) => {
     trigger.addEventListener('click', () => hideModal('corner-banner', cornerBanner));
   });
