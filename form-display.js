@@ -3,31 +3,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const formContainer = document.querySelector('[form-element="container"]');
   const triggersContainer = document.querySelector('[form-element="triggers"]');
   const triggerButtons = triggersContainer.querySelectorAll('[form-trigger]');
-  const forms = {
-    pro: document.querySelector('[form-profil="pro"]'),
-    private: document.querySelector('[form-profil="private"]'),
-  };
   const resetButton = formContainer.querySelector('[form-element="reset-btn"]');
-  const wishlistSection = document.querySelector('[form-element="wishlist"]'); // Section wishlist
+  const wishlistSection = document.querySelector('[form-element="wishlist"]');
 
-  // === Gestion de la Wishlist ===
-  /**
-   * Vérifie la clé "wishlist" dans le localStorage pour afficher/masquer la section wishlist.
-   */
+  // === Initialisation dynamique des formulaires ===
+  const forms = {};
+  document.querySelectorAll('[form-profil]').forEach((form) => {
+    const key = form.getAttribute('form-profil');
+    forms[key] = form;
+  });
+
+  // === Wishlist ===
   const updateWishlistVisibility = () => {
     if (wishlistSection) {
-      const storedWishlist = localStorage.getItem("wishlist"); // Vérifie la clé "wishlist"
+      const storedWishlist = localStorage.getItem("wishlist");
       if (storedWishlist) {
         const wishlist = JSON.parse(storedWishlist);
-        if (wishlist.length > 0) {
-          wishlistSection.style.display = "block"; // Affiche si des éléments sont présents
-          console.log("Wishlist visible, nombre d'éléments :", wishlist.length);
-        } else {
-          wishlistSection.style.display = "none"; // Cache si la wishlist est vide
-          console.log("Wishlist cachée car elle est vide.");
-        }
+        wishlistSection.style.display = wishlist.length > 0 ? "block" : "none";
+        console.log(`Wishlist ${wishlist.length > 0 ? "visible" : "cachée"}, nombre d'éléments :`, wishlist.length);
       } else {
-        wishlistSection.style.display = "none"; // Cache si la clé "wishlist" n'existe pas
+        wishlistSection.style.display = "none";
         console.log("Wishlist cachée car aucune clé 'wishlist' trouvée.");
       }
     } else {
@@ -35,68 +30,54 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // === Gestion des Formulaires ===
-  /**
-   * Réinitialise l'affichage des éléments et supprime la préférence sauvegardée.
-   */
+  // === Formulaires ===
   const resetDisplay = () => {
-    formContainer.style.display = "none"; // Cacher le conteneur principal
-    triggersContainer.style.display = "block"; // Afficher les triggers
+    formContainer.style.display = "none";
+    triggersContainer.style.display = "block";
     Object.values(forms).forEach((form) => {
-      if (form) form.style.display = "none"; // Cacher tous les formulaires
+      form.style.display = "none";
     });
-    localStorage.removeItem("formPreference"); // Supprimer les préférences sauvegardées
-    localStorage.removeItem("formPreferenceExpiration"); // Supprimer l'expiration
+    localStorage.removeItem("formPreference");
+    localStorage.removeItem("formPreferenceExpiration");
   };
 
-  /**
-   * Vérifie si la préférence est expirée.
-   * @returns {boolean} - true si expiré, false sinon.
-   */
   const isPreferenceExpired = () => {
     const expiration = localStorage.getItem("formPreferenceExpiration");
-    if (!expiration) return true; // Si aucune expiration n'est définie, considérer comme expirée
-    const now = new Date().getTime();
-    return now > parseInt(expiration, 10); // Comparer le temps actuel avec l'expiration
+    if (!expiration) return true;
+    const now = Date.now();
+    return now > parseInt(expiration, 10);
   };
 
-  // Chargement de la préférence sauvegardée
   const savedPreference = localStorage.getItem("formPreference");
   if (savedPreference && forms[savedPreference] && !isPreferenceExpired()) {
-    formContainer.style.display = "block"; // Afficher le conteneur principal
-    triggersContainer.style.display = "none"; // Cacher les triggers
-
-    // Afficher uniquement le formulaire correspondant à la préférence
-    Object.keys(forms).forEach((key) => {
-      forms[key].style.display = key === savedPreference ? "block" : "none";
+    formContainer.style.display = "block";
+    triggersContainer.style.display = "none";
+    Object.entries(forms).forEach(([key, form]) => {
+      form.style.display = key === savedPreference ? "block" : "none";
     });
   } else {
-    resetDisplay(); // Réinitialiser si la préférence est expirée ou invalide
+    resetDisplay();
   }
 
-  // Gérer les clics sur les boutons de trigger
+  // === Boutons de déclenchement ===
   triggerButtons.forEach((trigger) => {
     trigger.addEventListener("click", () => {
       const formType = trigger.getAttribute("form-trigger");
       if (formType && forms[formType]) {
-        formContainer.style.display = "block"; // Afficher le conteneur principal
-        triggersContainer.style.display = "none"; // Cacher les triggers
-        Object.keys(forms).forEach((key) => {
-          forms[key].style.display = key === formType ? "block" : "none"; // Afficher le bon formulaire
+        formContainer.style.display = "block";
+        triggersContainer.style.display = "none";
+        Object.entries(forms).forEach(([key, form]) => {
+          form.style.display = key === formType ? "block" : "none";
         });
-        // Sauvegarder la préférence avec une expiration
         localStorage.setItem("formPreference", formType);
-        const expirationTime = new Date().getTime() + 60 * 60 * 1000; // Ajouter 1 heure
-        localStorage.setItem("formPreferenceExpiration", expirationTime);
+        localStorage.setItem("formPreferenceExpiration", Date.now() + 60 * 60 * 1000);
       }
     });
   });
 
-  // Gérer les clics sur le bouton de réinitialisation
-  resetButton.addEventListener("click", () => {
-    resetDisplay(); // Réinitialiser les préférences et l'affichage
-  });
+  // === Réinitialisation ===
+  resetButton.addEventListener("click", resetDisplay);
 
-  // === Initialisation ===
-  updateWishlistVisibility(); // Mise à jour de la visibilité de la wishlist
+  // === Initialisation Wishlist ===
+  updateWishlistVisibility();
 });
