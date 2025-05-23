@@ -100,9 +100,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const combinedData = { ...browserInfo, ...utmFromURL, ...utmFromStorage, "document-referrer": referrer };
 
-        fillHiddenFields("wf-form-brief-pro", combinedData);
-        fillHiddenFields("wf-form-brief-private", combinedData);
-    }
+        document.querySelectorAll('form[form-prefix]').forEach(form => {
+            const formId = form.id; // ex: wf-form-brief-agency
+            fillHiddenFields(formId, combinedData);
+    });
+}
 
-    applyDataToForms();
+applyDataToForms();
 });
