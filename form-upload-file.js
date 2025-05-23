@@ -24,11 +24,11 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   };
 
-  // Trouver dynamiquement tous les attributs upload-*
-  const allUploadContainers = Array.from(document.querySelectorAll("[*|upload]"));
+  // Chercher tous les éléments avec un attribut commençant par 'upload-'
+  const allElements = Array.from(document.querySelectorAll("*"));
   const uploadAttributes = new Set();
 
-  allUploadContainers.forEach(el => {
+  allElements.forEach(el => {
     for (const attr of el.attributes) {
       if (attr.name.startsWith("upload-")) {
         uploadAttributes.add(attr.name);
@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // Gérer chaque attribut upload-*
+  // Appliquer le gestionnaire d'upload à chaque attribut trouvé
   uploadAttributes.forEach(attr => {
     handleUploads(attr);
   });
