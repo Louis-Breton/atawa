@@ -69,6 +69,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (formType === "pro") {
         if (proRoleWrapper) proRoleWrapper.style.display = "block";
+
+        // Masquer les autres triggers
+        triggerButtons.forEach(btn => {
+          if (btn !== trigger) btn.style.display = "none";
+        });
+
         return;
       }
 
