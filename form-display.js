@@ -5,6 +5,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const triggerButtons = triggersContainer.querySelectorAll('[form-trigger]');
   const resetButton = formContainer.querySelector('[form-element="reset-btn"]');
   const wishlistSection = document.querySelector('[form-element="wishlist"]');
+  const proRoleWrapper = document.querySelector('[role-pro="wrapper"]');
+  const proRoleInput = document.querySelector('#brief-pro-lead-role');
 
   // === Initialisation dynamique des formulaires ===
   const forms = {};
@@ -34,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const resetDisplay = () => {
     formContainer.style.display = "none";
     triggersContainer.style.display = "block";
+    if (proRoleWrapper) proRoleWrapper.style.display = "none";
     Object.values(forms).forEach((form) => {
       form.style.display = "none";
     });
@@ -63,7 +66,37 @@ document.addEventListener("DOMContentLoaded", () => {
   triggerButtons.forEach((trigger) => {
     trigger.addEventListener("click", () => {
       const formType = trigger.getAttribute("form-trigger");
+
+      if (formType === "pro") {
+        // Affiche le sélecteur de rôle spécifique au pro
+        if (proRoleWrapper) proRoleWrapper.style.display = "block";
+        return; // Ne déclenche pas immédiatement le formulaire
+      }
+
       if (formType && forms[formType]) {
+        formContainer.style.display = "block";
+        triggersContainer.style.display = "none";
+        Object.entries(forms).forEach(([key, form]) => {
+          form.style.display = key === formType ? "block" : "none";
+        });
+        localStorage.setItem("formPreference", formType);
+        localStorage.setItem("formPreferenceExpiration", Date.now() + 60 * 60 * 1000);
+      }
+    });
+  });
+
+  // === Comportement au clic sur une valeur de rôle (pro uniquement) ===
+  document.querySelectorAll('[role-value]').forEach((el) => {
+    el.addEventListener("click", () => {
+      const role = el.getAttribute("role-value");
+      if (proRoleInput) {
+        proRoleInput.value = role;
+      }
+      if (proRoleWrapper) {
+        proRoleWrapper.style.display = "none";
+      }
+      const formType = "pro";
+      if (forms[formType]) {
         formContainer.style.display = "block";
         triggersContainer.style.display = "none";
         Object.entries(forms).forEach(([key, form]) => {
