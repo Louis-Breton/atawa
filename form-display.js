@@ -68,9 +68,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const formType = trigger.getAttribute("form-trigger");
 
       if (formType === "pro") {
-        // Affiche le sélecteur de rôle spécifique au pro
         if (proRoleWrapper) proRoleWrapper.style.display = "block";
-        return; // Ne déclenche pas immédiatement le formulaire
+        return;
       }
 
       if (formType && forms[formType]) {
@@ -95,6 +94,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (proRoleWrapper) {
         proRoleWrapper.style.display = "none";
       }
+      window.scrollTo(0, 0);
+
       const formType = "pro";
       if (forms[formType]) {
         formContainer.style.display = "block";
