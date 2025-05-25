@@ -39,7 +39,10 @@ document.addEventListener("DOMContentLoaded", () => {
     formContainer.style.display = "none";
     triggersContainer.style.display = "block";
     if (proRoleWrapper) proRoleWrapper.style.display = "none";
-    triggerButtons.forEach(btn => btn.style.display = "inline-block");
+    triggerButtons.forEach(btn => {
+      btn.style.removeProperty("display");
+      btn.style.removeProperty("border-color");
+    });
     Object.values(forms).forEach((form) => {
       form.style.display = "none";
     });
