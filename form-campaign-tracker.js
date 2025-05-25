@@ -1,110 +1,85 @@
+<script>
 document.addEventListener("DOMContentLoaded", function () {
-    /**
-     * Récupère les infos du navigateur (langue, appareil, résolution)
-     */
-    function getBrowserInfo() {
-        return {
-            "browser-language": navigator.language || navigator.userLanguage,
-            "device-type": /Mobile|Android|iP(hone|od|ad)/i.test(navigator.userAgent) ? "Mobile" : "Desktop",
-            "screen-resolution": `${window.screen.width}x${window.screen.height}`,
-            "language-region": Intl.DateTimeFormat().resolvedOptions().locale || navigator.language
-        };
+  if (window._campaignTrackerRan) return;
+  window._campaignTrackerRan = true;
+
+  function getBrowserInfo() {
+    return {
+      "browser-language": navigator.language || navigator.userLanguage,
+      "device-type": /Mobile|Android|iP(hone|od|ad)/i.test(navigator.userAgent) ? "Mobile" : "Desktop",
+      "screen-resolution": `${window.screen.width}x${window.screen.height}`,
+      "language-region": Intl.DateTimeFormat().resolvedOptions().locale || navigator.language
+    };
+  }
+
+  function getUTMFromURL() {
+    const p = new URLSearchParams(window.location.search);
+    return {
+      "ads-gclid": p.get("gclid") || "",
+      "ads-camp": p.get("utm_campaign") || "",
+      "ads-adgroup": p.get("utm_adgroup") || "",
+      "ads-utm-term": p.get("utm_term") || "",
+      "ads-utm-campaign": p.get("utm_campaign") || "",
+      "ads-utm-source": p.get("utm_source") || ""
+    };
+  }
+
+  function getUTMFromStorage() {
+    try {
+      const stored = JSON.parse(localStorage.getItem("utm_tracking"));
+      if (!stored?.data) return {};
+      return {
+        "ads-gclid": stored.data["gclid"] || "",
+        "ads-utm-source": stored.data["utm_source"] || "",
+        "ads-utm-campaign": stored.data["utm_campaign"] || "",
+        "ads-utm-term": stored.data["utm_term"] || ""
+      };
+    } catch {
+      return {};
     }
+  }
 
-    /**
-     * Récupère les UTM depuis l'URL
-     */
-    function getUTMFromURL() {
-        const urlParams = new URLSearchParams(window.location.search);
-        return {
-            "ads-gclid": urlParams.get("gclid") || "",
-            "ads-camp": urlParams.get("utm_campaign") || "",
-            "ads-adgroup": urlParams.get("utm_adgroup") || "",
-            "ads-utm-term": urlParams.get("utm_term") || "",
-            "ads-utm-campaign": urlParams.get("utm_campaign") || "",
-            "ads-utm-source": urlParams.get("utm_source") || ""
-        };
+  function getReferrer() {
+    try {
+      const stored = JSON.parse(localStorage.getItem("utm_tracking"));
+      if (stored?.data?.["document-referrer"]) {
+        return stored.data["document-referrer"];
+      }
+    } catch {}
+    const ref = document.referrer;
+    if (!ref) return "Direct";
+    try {
+      const host = new URL(ref).hostname.split(".");
+      return host.slice(-2).join(".");
+    } catch {
+      return "Direct";
     }
+  }
 
-    /**
-     * Récupère les UTM depuis le localStorage
-     */
-    function getUTMFromStorage() {
-        try {
-            const storedUTM = localStorage.getItem("utm_tracking");
-            if (storedUTM) {
-                const parsedData = JSON.parse(storedUTM);
-                return {
-                    "ads-gclid": parsedData.data["gclid"] || "",
-                    "ads-utm-source": parsedData.data["utm_source"] || "",
-                    "ads-utm-campaign": parsedData.data["utm_campaign"] || "",
-                    "ads-utm-term": parsedData.data["utm_term"] || ""
-                };
-            }
-        } catch (e) {}
-        return {};
-    }
+  function fillHiddenFields(formId, data) {
+    const form = document.getElementById(formId);
+    if (!form) return;
 
-    /**
-     * Récupère le référent depuis le localStorage ou document.referrer
-     */
-    function getReferrer() {
-        try {
-            const storedReferrer = localStorage.getItem("utm_tracking");
-            if (storedReferrer) {
-                let parsedData = JSON.parse(storedReferrer);
-                if (parsedData.data && parsedData.data["document-referrer"]) {
-                    return parsedData.data["document-referrer"]; // Utilise la valeur existante
-                }
-            }
-        } catch (e) {}
-
-        let referrer = document.referrer;
-        if (!referrer) return ""; // Aucun référent détecté
-
-        try {
-            let hostname = new URL(referrer).hostname;
-            let parts = hostname.split(".");
-            if (parts.length > 2) {
-                return parts[parts.length - 2] + "." + parts[parts.length - 1]; // Format simplifié
-            }
-            return hostname;
-        } catch (e) {
-            return "";
-        }
-    }
-
-    /**
-     * Injecte les valeurs dans les champs cachés
-     */
-    function fillHiddenFields(formId, data) {
-        const form = document.getElementById(formId);
-        if (!form) return;
-
-        Object.keys(data).forEach(key => {
-            const field = form.querySelector(`input[name="brief-${formId.split('-').pop()}-${key}"]`);
-            if (field) {
-                field.value = data[key];
-            }
-        });
-    }
-
-    /**
-     * Applique les valeurs aux formulaires
-     */
-    function applyDataToForms() {
-        const browserInfo = getBrowserInfo();
-        const utmFromURL = getUTMFromURL();
-        const utmFromStorage = getUTMFromStorage();
-        const referrer = getReferrer();
-
-        const combinedData = { ...browserInfo, ...utmFromURL, ...utmFromStorage, "document-referrer": referrer };
-
-        document.querySelectorAll('form[form-prefix]').forEach(form => {
-            const formId = form.id; // ex: wf-form-brief-agency
-            fillHiddenFields(formId, combinedData);
+    Object.entries(data).forEach(([key, value]) => {
+      const input = form.querySelector(`[name="brief-${formId.split('-').pop()}-${key}"]`);
+      if (input && value !== undefined) input.value = value;
     });
-}
+  }
 
-applyDataToForms();
+  function applyDataToForms() {
+    const data = {
+      ...getBrowserInfo(),
+      ...getUTMFromURL(),
+      ...getUTMFromStorage(),
+      "document-referrer": getReferrer()
+    };
+
+    document.querySelectorAll("form[form-prefix]").forEach(form => {
+      const formId = form.id;
+      fillHiddenFields(formId, data);
+    });
+  }
+
+  applyDataToForms();
 });
+</script>
