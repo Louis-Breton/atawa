@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const wishlistSection = document.querySelector('[form-element="wishlist"]');
   const proRoleWrapper = document.querySelector('[role-pro="wrapper"]');
   const proRoleInput = document.querySelector('#brief-pro-lead-role');
+  const proCompanyInput = document.querySelector('#brief-pro-company');
+  const roleLabelDestination = document.querySelector('p[role-label="destination"]');
 
   // === Initialisation dynamique des formulaires ===
   const forms = {};
@@ -37,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
     formContainer.style.display = "none";
     triggersContainer.style.display = "block";
     if (proRoleWrapper) proRoleWrapper.style.display = "none";
+    triggerButtons.forEach(btn => btn.style.display = "inline-block");
     Object.values(forms).forEach((form) => {
       form.style.display = "none";
     });
@@ -69,12 +72,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (formType === "pro") {
         if (proRoleWrapper) proRoleWrapper.style.display = "block";
-
-        // Masquer les autres triggers
         triggerButtons.forEach(btn => {
           if (btn !== trigger) btn.style.display = "none";
         });
-
         return;
       }
 
@@ -93,9 +93,19 @@ document.addEventListener("DOMContentLoaded", () => {
   // === Comportement au clic sur une valeur de rôle (pro uniquement) ===
   document.querySelectorAll('[role-value]').forEach((el) => {
     el.addEventListener("click", () => {
-      const role = el.getAttribute("role-value");
+      const roleValue = el.getAttribute("role-value");
+      const roleCompany = el.getAttribute("role-company");
+      const labelOrigin = el.querySelector('[role-label="origin"]');
+      const labelText = labelOrigin ? labelOrigin.textContent : "";
+
       if (proRoleInput) {
-        proRoleInput.value = role;
+        proRoleInput.value = roleValue;
+      }
+      if (roleCompany && proCompanyInput) {
+        proCompanyInput.placeholder = roleCompany;
+      }
+      if (roleLabelDestination && labelText) {
+        roleLabelDestination.textContent = labelText;
       }
       if (proRoleWrapper) {
         proRoleWrapper.style.display = "none";
