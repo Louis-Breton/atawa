@@ -1,4 +1,3 @@
-<script>
 document.addEventListener('DOMContentLoaded', function () {
   // Supprime tous les états d'erreur d'un champ donné
   function removeError(field) {
@@ -58,6 +57,31 @@ document.addEventListener('DOMContentLoaded', function () {
           dropdownList.style.transform = 'translate3d(0px, -2rem, 0px)';
         });
       });
+    });
+  }
+
+  // Génère dynamiquement les 16 prochains mois dans les <select> période
+  function populateMonthSelects() {
+    document.querySelectorAll('select[name$="date-periode"]').forEach(select => {
+      const existingValues = new Set();
+      select.querySelectorAll('option').forEach(opt => existingValues.add(opt.value));
+
+      const lang = navigator.language || 'fr';
+      const monthNames = lang.startsWith('fr')
+        ? ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+        : ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+      const today = new Date();
+      for (let i = 0; i < 16; i++) {
+        const date = new Date(today.getFullYear(), today.getMonth() + i, 1);
+        const optionText = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+        if (!existingValues.has(optionText)) {
+          const opt = document.createElement('option');
+          opt.value = optionText;
+          opt.textContent = optionText;
+          select.appendChild(opt);
+        }
+      }
     });
   }
 
@@ -261,6 +285,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const prefix = form.getAttribute('form-prefix');
     setupFieldListeners(form, prefix);
     populateSelectAndDropdown();
+    populateMonthSelects();
     form.querySelectorAll('[btn="check-error"]').forEach(btn => {
       btn.addEventListener('click', () => {
         validateForm(form);
@@ -268,4 +293,3 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 });
-</script>
