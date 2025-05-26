@@ -1,12 +1,31 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Récupérer les valeurs depuis le sessionStorage
+  // Récupération depuis sessionStorage
   const formType = sessionStorage.getItem("formType");
   const budget = sessionStorage.getItem("formBudget");
   const civilite = sessionStorage.getItem("formCivilite");
   const nom = sessionStorage.getItem("formNom");
-  const role = sessionStorage.getItem("formLeadRole");
+  const leadRole = sessionStorage.getItem("formLeadRole");
 
-  // Mapping des segments budgétaires
+  // Affichage conditionnel des champs visibles uniquement
+  const mappings = [
+    { key: civilite, selector: 'span[data-form="civilite"]' },
+    { key: nom, selector: 'span[data-form="nom"]' },
+    { key: leadRole, selector: 'span[data-form="leadrole"]' }
+  ];
+
+  mappings.forEach(({ key, selector }) => {
+    const span = document.querySelector(selector);
+    if (span) {
+      if (key) {
+        span.textContent = key;
+        span.style.display = "";
+      } else {
+        span.style.display = "none";
+      }
+    }
+  });
+
+  // Mapping des segments pour dataLayer uniquement
   const redirectMappings = {
     "Professionnel": {
       "< 3 000 €": "Professionnel_1",
@@ -30,50 +49,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // Affichage conditionnel : civilité
-  const civiliteSpan = document.querySelector('span[data-form="civilite"]');
-  if (civiliteSpan) {
-    if (civilite) {
-      civiliteSpan.textContent = civilite;
-      civiliteSpan.style.display = "";
-    } else {
-      civiliteSpan.style.display = "none";
-    }
-  }
-
-  // Affichage conditionnel : nom
-  const nomSpan = document.querySelector('span[data-form="nom"]');
-  if (nomSpan) {
-    if (nom) {
-      nomSpan.textContent = nom;
-      nomSpan.style.display = "";
-    } else {
-      nomSpan.style.display = "none";
-    }
-  }
-
-  // Affichage conditionnel : rôle
-  const roleSpan = document.querySelector('span[data-form="role"]');
-  if (roleSpan) {
-    if (role) {
-      roleSpan.textContent = role;
-      roleSpan.style.display = "";
-    } else {
-      roleSpan.style.display = "none";
-    }
-  }
-
-  // Envoi dans le dataLayer
   if (formType && budget) {
     const budgetCategory = redirectMappings[formType]?.[budget] || "Inconnu";
-
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({
       event: "briefSubmission",
       form: budgetCategory,
       formType: formType,
       formBudget: budget,
-      leadRole: role || ""
+      leadRole: leadRole || ""
     });
   }
 });
