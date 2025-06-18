@@ -42,6 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.removeItem("formPreference");
     localStorage.removeItem("formPreferenceExpiration");
     localStorage.removeItem("leadRoleLabel");
+    localStorage.removeItem("leadRoleValue");
     localStorage.removeItem("leadCompanyPlaceholder");
 
     if (companyInput) {
@@ -81,7 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (savedPlaceholder) companyInput.placeholder = savedPlaceholder;
       }
       if (leadRoleInput) {
-        leadRoleInput.value = localStorage.getItem("leadRoleLabel") || "";
+        leadRoleInput.value = localStorage.getItem("leadRoleValue") || "";
       }
     }
   } else {
@@ -94,14 +95,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!formType) return;
 
       if (formType === "pro" && roleWrapper) {
-        // Afficher uniquement le choix de rôle
         roleWrapper.style.display = "block";
-
-        // Cacher les autres triggers
         triggerButtons.forEach(btn => {
           if (btn !== trigger) btn.style.display = "none";
         });
-
         return;
       }
 
@@ -135,18 +132,16 @@ document.addEventListener("DOMContentLoaded", () => {
       localStorage.setItem("formPreference", "pro");
       localStorage.setItem("formPreferenceExpiration", Date.now() + 60 * 60 * 1000);
       localStorage.setItem("leadRoleLabel", roleLabelOrigin);
+      localStorage.setItem("leadRoleValue", roleValue);
       localStorage.setItem("leadCompanyPlaceholder", roleCompany);
 
-      // Affiche le formulaire PRO
       if (forms["pro"]) {
         formContainer.style.display = "block";
         triggersContainer.style.display = "none";
         forms["pro"].style.display = "block";
       }
 
-      // Cache le wrapper de sélection
       roleWrapper.style.display = "none";
-
       window.scrollTo({ top: 0, behavior: "auto" });
     });
   }
