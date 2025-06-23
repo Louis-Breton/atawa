@@ -1,6 +1,6 @@
 {
   "eventTypeOrderByProfile": {
-    "agence_evenementielle": [
+    "Agence Evenementielle": [
       "Réception privée",
       "Soirée d'entreprise",
       "Spectacle - Festival",
@@ -18,7 +18,7 @@
       "Événement collectivité",
       "Événement associatif"
     ],
-    "ambassade": [
+    "Ambassade": [
       "Soirée d'entreprise",
       "Réception privée",
       "Spectacle - Festival",
@@ -26,7 +26,7 @@
       "Autre",
       "Inauguration"
     ],
-    "association": [
+    "Association": [
       "Spectacle - Festival",
       "Événement sportif",
       "Événement associatif",
@@ -40,7 +40,7 @@
       "Événement collectivité",
       "Défilé de mode"
     ],
-    "autres": [
+    "Autres": [
       "Réception privée",
       "mariage",
       "Spectacle - Festival",
@@ -58,7 +58,7 @@
       "Événement associatif",
       "Défilé de mode"
     ],
-    "collectivite": [
+    "Collectivite": [
       "Spectacle - Festival",
       "Autre",
       "Salon et exposition",
@@ -72,7 +72,7 @@
       "Production audiovisuelle",
       "Conférence - Convention"
     ],
-    "fondation": [
+    "Fondation": [
       "Événement collectivité",
       "Réception privée",
       "Événement sportif",
@@ -86,7 +86,7 @@
       "Inauguration",
       "Production audiovisuelle"
     ],
-    "grande_ecole": [
+    "Grande Ecole": [
       "Événement sportif",
       "Conférence - Convention",
       "Spectacle - Festival",
@@ -98,7 +98,7 @@
       "Installation semi-permanente",
       "Production audiovisuelle"
     ],
-    "grande_entreprise": [
+    "Grande entreprise": [
       "Soirée d'entreprise",
       "Inauguration",
       "Séminaire - Team Building - I",
@@ -115,7 +115,7 @@
       "Production audiovisuelle",
       "Événement associatif"
     ],
-    "hôtel": [
+    "Hôtel": [
       "Réception privée",
       "Soirée d'entreprise",
       "mariage",
@@ -127,7 +127,7 @@
       "Production audiovisuelle",
       "Conférence - Convention"
     ],
-    "lieu_événementiel": [
+    "Lieu événementiel": [
       "Réception privée",
       "mariage",
       "Séminaire - Team Building - I",
@@ -140,7 +140,7 @@
       "Spectacle - Festival",
       "Production audiovisuelle"
     ],
-    "organisateur_d’evenement": [
+    "Organisateur d’evenement": [
       "Spectacle - Festival",
       "Réception privée",
       "mariage",
@@ -155,7 +155,7 @@
       "Inauguration",
       "Lancement de produit"
     ],
-    "pme": [
+    "PME": [
       "Soirée d'entreprise",
       "Réception privée",
       "Inauguration",
@@ -172,7 +172,7 @@
       "Événement collectivité",
       "Production audiovisuelle"
     ],
-    "wedding_planner": [
+    "Wedding Planner": [
       "mariage",
       "Réception privée",
       "Soirée d'entreprise",
@@ -220,7 +220,7 @@
     {
       "value": "Séminaire - Team Building - I",
       "label_fr": "Séminaire ou team building",
-      "label_en": "Seminar and team building"
+      "label_en": "Seminar & team building"
     },
     {
       "value": "Événement sportif",
@@ -230,7 +230,7 @@
     {
       "value": "Conférence - Convention",
       "label_fr": "Conférence & convention",
-      "label_en": "Conference and convention"
+      "label_en": "Conference & convention"
     },
     {
       "value": "Installation semi-permanente",
@@ -245,7 +245,7 @@
     {
       "value": "Lancement de produit",
       "label_fr": "Lancement de produit",
-      "label_en": "Product launch and street marketing"
+      "label_en": "Product launch & street marketing"
     },
     {
       "value": "Défilé de mode",
@@ -255,17 +255,17 @@
     {
       "value": "Événement collectivité",
       "label_fr": "Événement collectivité",
-      "label_en": "Community event"
+      "label_en": "Community Event"
     },
     {
       "value": "Événement associatif",
       "label_fr": "Événement associatif",
-      "label_en": "Voluntary/ nonprofit event"
+      "label_en": "Voluntary, nonprofit event"
     },
     {
       "value": "BTP",
       "label_fr": "BTP",
-      "label_en": "Construction industry (réfectoire / accueil ...)"
+      "label_en": "Construction industry"
     },
     {
       "value": "événement digital",
